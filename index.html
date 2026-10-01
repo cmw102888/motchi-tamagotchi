@@ -14,30 +14,30 @@
 </head>
 <body>
   <main class="app">
-    <section class="world" aria-label="MOTCHI LIFE �÷��� ȭ��">
-      <div class="world-hud"><div><strong id="petName">����</strong><small id="generation">1����</small></div><div class="top-actions"><span id="coinLabel" class="coin-label">?? 80M</span><button id="soundButton" class="small-button" type="button">?? �Ҹ�</button></div></div>
+    <section class="world" aria-label="MOTCHI LIFE 플레이 화면">
+      <div class="world-hud"><div><strong id="petName">모찌</strong><small id="generation">1세대</small></div><div class="top-actions"><span id="coinLabel" class="coin-label">🪙 80M</span><button id="soundButton" class="small-button" type="button">🔊 소리</button></div></div>
       <div class="room-window" aria-hidden="true"><i></i></div>
       <div class="room-plant" aria-hidden="true"><i></i></div>
       <div class="room-shelf" aria-hidden="true"><i></i></div>
       <div class="room-rug" aria-hidden="true"></div>
       <div class="room-floor" aria-hidden="true"></div>
-      <div class="world-stage"><span id="stageLabel">��</span><span id="ageLabel">0��</span><span id="clockLabel">12:00</span></div>
-      <div class="world-actions left"><button type="button" data-action="openFood">??<small>��</small></button><button type="button" data-action="openHygiene">??<small>�ı�</small></button><button type="button" data-action="cleanPoop">??<small>û��</small></button></div>
-      <div class="world-actions right"><button type="button" data-action="talk">??<small>��ȭ</small></button><button type="button" data-action="rest">??<small>�޽�</small></button><button type="button" data-action="treat">??<small>ġ��</small></button></div>
-      <div class="pet-scene"><canvas id="petCanvas" width="160" height="128" role="img" aria-label="��Ʈ ĳ����"></canvas><span id="sceneBadge" class="scene-badge" hidden></span></div>
-      <div id="speech" class="speech" aria-live="polite">��� ��ٷ���</div>
-      <div class="quick-stats"><span id="foodStat">?? 4/4</span><span id="moodStat">�� 4/4</span><span id="energyStat">? 4/4</span></div>
+      <div class="world-stage"><span id="stageLabel">알</span><span id="ageLabel">0일</span><span id="clockLabel">12:00</span></div>
+      <div class="world-actions left"><button type="button" data-action="openFood">🍚<small>밥</small></button><button type="button" data-action="openHygiene">🧼<small>씻기</small></button><button type="button" data-action="cleanPoop">🚽<small>청소</small></button></div>
+      <div class="world-actions right"><button type="button" data-action="talk">💬<small>대화</small></button><button type="button" data-action="rest">🛌<small>휴식</small></button><button type="button" data-action="treat">💊<small>치료</small></button></div>
+      <div class="pet-scene"><canvas id="petCanvas" width="160" height="128" role="img" aria-label="도트 캐릭터"></canvas><span id="sceneBadge" class="scene-badge" hidden></span></div>
+      <div id="speech" class="speech" aria-live="polite">모찌가 기다려요</div>
+      <div class="quick-stats"><span id="foodStat">🍚 4/4</span><span id="moodStat">♥ 4/4</span><span id="energyStat">⚡ 4/4</span></div>
     </section>
     <section class="interface">
       <div id="notice" class="notice" aria-live="polite"></div>
       <div id="screen" class="screen"></div>
-      <nav id="tabs" class="tabs" aria-label="���� �޴�"></nav>
+      <nav id="tabs" class="tabs" aria-label="게임 메뉴"></nav>
     </section>
   </main>
-  <section id="activityLayer" class="activity-layer" aria-label="Ȱ�� �÷��� ȭ��" hidden>
+  <section id="activityLayer" class="activity-layer" aria-label="활동 플레이 화면" hidden>
     <div class="activity-stage">
-      <div class="activity-hud"><button id="activityExit" type="button" aria-label="Ȱ�� �׸��α�">��</button><strong id="activityTitle">Ȱ��</strong><span id="activityScore">0��</span></div>
-      <canvas id="activityCanvas" width="390" height="650" aria-label="���� �����ϴ� Ȱ�� ȭ��"></canvas>
+      <div class="activity-hud"><button id="activityExit" type="button" aria-label="활동 그만두기">←</button><strong id="activityTitle">활동</strong><span id="activityScore">0점</span></div>
+      <canvas id="activityCanvas" width="390" height="650" aria-label="직접 조작하는 활동 화면"></canvas>
       <div id="activityInstructions" class="activity-instructions"></div>
       <div id="activityControls" class="activity-controls"></div>
     </div>
