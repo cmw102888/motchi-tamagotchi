@@ -1,16 +1,2 @@
-{
-  "name": "MOTCHI 다마고치",
-  "short_name": "MOTCHI",
-  "description": "언제나 함께하는 작은 레트로 다마고치",
-  "lang": "ko",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#ffd8e6",
-  "theme_color": "#ff7ca8",
-  "icons": [
-    {"src":"./icon-192.svg","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},
-    {"src":"./icon-512.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}
-  ]
-}
+{"name":"MOTCHI LIFE","short_name":"MOTCHI","description":"도트 캐릭터와 함께하는 모바일 육성 게임","lang":"ko","start_url":"./","scope":"./","display":"standalone","orientation":"portrait","background_color":"#f6dfb8","theme_color":"#f6dfb8","icons":[{"src":"./icon-192.svg","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},{"src":"./icon-512.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]}
+
