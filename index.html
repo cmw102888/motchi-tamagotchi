@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#ff7ca8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MOTCHI">
+  <title>MOTCHI</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon-192.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon-192.svg">
+  <style>
+    :root{font-family:ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif;color:#43273a;background:#ffd8e6}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{margin:0;min-height:100dvh;overflow:hidden;background:radial-gradient(circle at 50% 15%,#fff7fb 0,#ffd3e2 45%,#ffacc9 100%)}
+    button{font:inherit;color:inherit;touch-action:manipulation}
+    .app{min-height:100dvh;padding:max(12px,env(safe-area-inset-top)) 14px max(12px,env(safe-area-inset-bottom));display:grid;place-items:center}
+    .shell{width:min(100%,480px);height:min(900px,calc(100dvh - 24px));min-height:620px;border:5px solid #713a59;border-radius:42% 42% 34% 34%/24% 24% 18% 18%;background:linear-gradient(135deg,#ffb4d1,#ff77aa);box-shadow:0 14px 0 #7b3558,0 25px 42px #8f2a5740,inset 8px 8px 0 #ffd7e7,inset -8px -8px 0 #d84681;display:grid;grid-template-rows:auto 1fr auto;gap:13px;padding:18px 18px 24px;position:relative}
+    .brand{text-align:center;color:white;text-shadow:0 3px #8d2e5b;letter-spacing:.13em;font-size:clamp(25px,7vw,38px);font-weight:1000;line-height:1}
+    .screen{background:#b7cf75;border:7px solid #7c4662;border-radius:27px;box-shadow:inset 0 0 0 4px #78944f,0 7px 0 #6b2d4b;min-height:0;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;position:relative}
+    .screen::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.14;background:repeating-linear-gradient(0deg,transparent 0 3px,#203319 4px)}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:10px 9px 6px;font-family:ui-monospace,monospace;font-size:11px;font-weight:900;text-align:center;z-index:1}
+    .meter{height:6px;border:1px solid #304225;border-radius:4px;overflow:hidden;margin-top:2px}.meter i{display:block;height:100%;background:#304225}
+    .world{display:grid;place-items:center;position:relative;min-height:0;z-index:1}.pet{font-size:clamp(88px,25vw,138px);filter:grayscale(1) contrast(1.5);animation:bob 1.1s steps(2) infinite;user-select:none}.pet.sleep{animation:none;opacity:.72}.poop{position:absolute;right:16%;bottom:16%;font-size:35px;filter:grayscale(1)}
+    .bubbles{position:absolute;inset:0;pointer-events:none}.bubble{position:absolute;font-size:25px;animation:rise .8s ease-out forwards}
+    .message{min-height:49px;padding:5px 12px 11px;text-align:center;font:900 14px/1.25 ui-monospace,monospace;z-index:1}
+    .panel{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.action{min-height:67px;border:3px solid #6c3150;border-radius:17px;background:linear-gradient(#fff8fb,#ffd5e5);box-shadow:0 6px 0 #6c3150;font-weight:1000;font-size:13px;display:grid;place-items:center;align-content:center;gap:2px}.action span{font-size:24px}.action:active{transform:translateY(5px);box-shadow:0 1px 0 #6c3150}.action[data-key="reset"]{background:#ffe5ca}
+    .tiny{position:absolute;right:28px;top:58px;border:2px solid #74344f;border-radius:999px;background:#fff8;padding:5px 9px;font-size:11px;font-weight:900}
+    @keyframes bob{50%{transform:translateY(-7px)}}@keyframes rise{to{transform:translateY(-70px);opacity:0}}
+    @media(max-height:690px){.shell{min-height:560px;padding:13px 15px 18px}.action{min-height:54px}.pet{font-size:82px}.brand{font-size:24px}.stats{padding-top:7px}}
+  </style>
+</head>
+<body>
+  <main class="app"><section class="shell" aria-label="MOTCHI 다마고치">
+    <header class="brand">MOTCHI</header><button id="sound" class="tiny" aria-label="소리 켜기 또는 끄기">SOUND ON</button>
+    <section class="screen" aria-live="polite">
+      <div class="stats">
+        <div>HUNGER<div class="meter"><i id="m-hunger"></i></div></div><div>HAPPY<div class="meter"><i id="m-happy"></i></div></div><div>HEALTH<div class="meter"><i id="m-health"></i></div></div><div>CLEAN<div class="meter"><i id="m-clean"></i></div></div>
+      </div>
+      <div class="world"><div id="pet" class="pet">🥚</div><div id="poop" class="poop" hidden>♟</div><div id="bubbles" class="bubbles"></div></div>
+      <div id="message" class="message">알이 따뜻해지고 있어요…</div>
+    </section>
+    <nav class="panel" aria-label="돌보기">
+      <button class="action" data-key="feed"><span>🍙</span>FEED</button><button class="action" data-key="play"><span>🎾</span>PLAY</button><button class="action" data-key="sleep"><span>🌙</span>SLEEP</button>
+      <button class="action" data-key="clean"><span>🧻</span>WC</button><button class="action" data-key="med"><span>💊</span>MED</button><button class="action" data-key="reset"><span>↻</span>RESET</button>
+    </nav>
+  </section></main>
+  <script>
+  (()=>{
+    const KEY='motchi-save-v2', $=s=>document.querySelector(s), clamp=n=>Math.max(0,Math.min(100,n));
+    const fresh=()=>({born:Date.now(),last:Date.now(),hunger:72,happy:72,health:100,clean:100,poop:false,sick:false,sleep:false,sound:true});
+    let s; try{s={...fresh(),...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{s=fresh()}
+    const stages=[['🥚','알'],['●','베이비'],['♟','키드'],['♚','MOTCHI']];
+    function age(){return (Date.now()-s.born)/60000} function stage(){let a=age();return a<.3?0:a<4?1:a<15?2:3}
+    function save(){s.last=Date.now();localStorage.setItem(KEY,JSON.stringify(s))}
+    function catchUp(){let mins=Math.min(720,(Date.now()-s.last)/60000);s.hunger=clamp(s.hunger-mins*.45);s.happy=clamp(s.happy-mins*.28);s.clean=clamp(s.clean-mins*.22);if(s.hunger<18||s.clean<18)s.health=clamp(s.health-mins*.3);if(Math.random()<Math.min(.75,mins/120))s.poop=true;if(s.health<35)s.sick=true}
+    function tone(freq=500){if(!s.sound)return;try{let c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type='square';o.frequency.value=freq;g.gain.setValueAtTime(.035,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.09);o.start();o.stop(c.currentTime+.1)}catch{}}
+    function say(t){$('#message').textContent=t}
+    function fx(e){let b=document.createElement('b');b.className='bubble';b.textContent=e;b.style.left=(25+Math.random()*50)+'%';b.style.top=(45+Math.random()*30)+'%';$('#bubbles').append(b);setTimeout(()=>b.remove(),850)}
+    function render(){let st=stage();$('#pet').textContent=stages[st][0];$('#pet').classList.toggle('sleep',s.sleep);$('#poop').hidden=!s.poop;for(let k of ['hunger','happy','health','clean'])$('#m-'+k).style.width=s[k]+'%';$('#sound').textContent='SOUND '+(s.sound?'ON':'OFF');if(!s.sleep&&!s.sick&&$('#message').textContent==='')say(stages[st][1]+' MOTCHI가 기다려요!')}
+    const acts={
+      feed(){s.hunger=clamp(s.hunger+26);s.health=clamp(s.health+2);s.sleep=false;say('냠냠! 맛있어요.');fx('♥');tone(620)},
+      play(){if(s.hunger<12){say('배가 너무 고파요!');tone(180);return}s.happy=clamp(s.happy+28);s.hunger=clamp(s.hunger-7);s.sleep=false;say('신나는 놀이 시간!');fx('★');tone(760)},
+      sleep(){s.sleep=!s.sleep;say(s.sleep?'새근새근… 회복 중이에요.':'좋은 아침!');tone(s.sleep?260:540)},
+      clean(){if(s.poop){s.poop=false;s.clean=clamp(s.clean+45);s.health=clamp(s.health+4);say('반짝반짝 깨끗해요!')}else{say('이미 깨끗해요.')}fx('✦');tone(680)},
+      med(){if(s.sick||s.health<70){s.sick=false;s.health=clamp(s.health+32);say('약을 먹고 건강해졌어요!');fx('+');tone(700)}else say('지금은 건강해요!')},
+      reset(){if(confirm('MOTCHI의 모든 기록을 지우고 새 알로 시작할까요?')){s=fresh();say('새로운 알이 왔어요!');tone(500)}}
+    };
+    document.querySelectorAll('.action').forEach(b=>b.addEventListener('click',()=>{acts[b.dataset.key]();save();render()}));
+    $('#sound').addEventListener('click',()=>{s.sound=!s.sound;save();render();tone(540)});
+    catchUp();render();save();
+    setInterval(()=>{if(s.sleep){s.health=clamp(s.health+1.1);s.happy=clamp(s.happy+.3)}else{s.hunger=clamp(s.hunger-.32);s.happy=clamp(s.happy-.18);s.clean=clamp(s.clean-.13)}if(!s.poop&&Math.random()<.006)s.poop=true;if(s.hunger<15||s.clean<12){s.health=clamp(s.health-.28);if(s.health<36)s.sick=true}if(s.sick)say('MOTCHI가 아파요. MED가 필요해요!');save();render()},10000);
+    addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+    if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js'));
+  })();
+  </script>
+</body>
+</html>
