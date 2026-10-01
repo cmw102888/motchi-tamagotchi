@@ -96,6 +96,11 @@
   const storedPet=state.pet||{};
   state.pet={...newPet(),...storedPet,stats:{...newPet().stats,...storedPet.stats},hygiene:{...newPet().hygiene,...storedPet.hygiene},skills:{...newPet().skills,...storedPet.skills}};
   let tab='care', menuOpen=false, notice='', activity=null, dialogState=null, game=null, audio=null, lastStage=state.pet.stage;
+  let reaction=null, reactionTimer=0;
+  function react(kind,text){
+    const current={kind,text};reaction=current;clearTimeout(reactionTimer);
+    reactionTimer=setTimeout(()=>{if(reaction===current){reaction=null;renderTop()}},2800);
+  }
   const p=()=>state.pet;
   function log(text){state.journal.unshift({at:Date.now(),text});state.journal=state.journal.slice(0,80);notice=text;}
   function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch{notice='저장 공간이 부족합니다. 브라우저 데이터를 확인해주세요.'}}
@@ -150,9 +155,9 @@
   function spendItem(id){if(!has(id))return false;state.inventory[id]--;if(state.inventory[id]<=0)delete state.inventory[id];return true}
   function price(item){return Math.max(1,Math.round(item.price*(p().job==='merchant'?.85:1)))}
   function buy(id){const item=shop.find(x=>x.id===id);if(!item)return;if(state.coins<price(item)){notify('M코인이 부족해요. 학교·게임·직업 활동으로 벌 수 있어요.','warning');return}if(item.type==='gear'&&has(id)){notify('이미 가지고 있는 도구예요.');return}state.coins-=price(item);addItem(id);care(`${item.name}을(를) 구입했어요.`)}
-  function feed(id){if(!canAct())return;const item=shop.find(x=>x.id===id&&x.type==='food');if(!item||!spendItem(id)){notify('재고가 없어요. 슈퍼마켓에서 구입하세요.','warning');return}const st=p().stats;const over=st.satiety>80;st.satiety=cap(st.satiety+item.satiety);st.weight=cap(st.weight+item.calories*(over?.9:.35),4,80);st.health=cap(st.health+item.health);st.mood=cap(st.mood+(id==='cake'?12:3));p().hygiene.teeth=cap(p().hygiene.teeth-(id==='cake'?13:5));if(over){st.stress=cap(st.stress+6);if(st.weight>38)p().illness='복통'}p().lastFed=Date.now();care(over?'배부른데 더 먹어 속이 불편해 보여요.':`${item.name}을(를) 맛있게 먹었어요.`)}
-  function cleanPoop(){if(!canAct())return;if(!p().poop){notify('화장실은 깨끗해요.');return}p().poop=0;p().dirtySince=0;p().hygiene.body=cap(p().hygiene.body+13);care('화장실을 청소했어요.')}
-  function rest(){if(!canAct())return;p().stats.energy=cap(p().stats.energy+22);p().stats.stress=cap(p().stats.stress-18);p().stats.mood=cap(p().stats.mood+4);p().lastSleep=Date.now();care('잠깐 쉬면서 기운을 되찾았어요.')}
+  function feed(id){if(!canAct())return;const item=shop.find(x=>x.id===id&&x.type==='food');if(!item||!spendItem(id)){notify('재고가 없어요. 슈퍼마켓에서 구입하세요.','warning');return}const st=p().stats;const over=st.satiety>80;st.satiety=cap(st.satiety+item.satiety);st.weight=cap(st.weight+item.calories*(over?.9:.35),4,80);st.health=cap(st.health+item.health);st.mood=cap(st.mood+(id==='cake'?12:3));p().hygiene.teeth=cap(p().hygiene.teeth-(id==='cake'?13:5));if(over){st.stress=cap(st.stress+6);if(st.weight>38)p().illness='복통'}p().lastFed=Date.now();react('fed',over?'으… 너무 배불러!':'냠냠! 맛있어!');care(over?'배부른데 더 먹어 속이 불편해 보여요.':`${item.name}을(를) 맛있게 먹었어요.`)}
+  function cleanPoop(){if(!canAct())return;if(!p().poop){notify('화장실은 깨끗해요.');return}p().poop=0;p().dirtySince=0;p().hygiene.body=cap(p().hygiene.body+13);react('clean','와, 방이 깨끗해졌어!');care('화장실을 청소했어요.')}
+  function rest(){if(!canAct())return;p().stats.energy=cap(p().stats.energy+22);p().stats.stress=cap(p().stats.stress-18);p().stats.mood=cap(p().stats.mood+4);p().lastSleep=Date.now();react('rest','후아… 기운이 난다!');care('잠깐 쉬면서 기운을 되찾았어요.')}
   function lights(){p().lightOn=!p().lightOn;care(p().lightOn?'불을 켰어요.':'불을 끄고 잠잘 준비를 했어요.')}
   function treat(){if(!canAct())return;if(!p().illness){notify('지금은 아프지 않아요.');return}if(!spendItem('medicine')){notify('약이 없어요. 슈퍼마켓에서 구매하세요.','warning');return}const old=p().illness;p().illness=null;p().stats.health=cap(p().stats.health+24);p().stats.immunity=cap(p().stats.immunity+12);p().criticalSince=0;care(`${old} 치료를 했어요. 휴식과 위생 관리도 필요해요.`)}
   function sitter(){if(!canAct())return;if(p().illness||p().stats.satiety<25){notify('아프거나 굶주린 상태에서는 맡길 수 없어요.','warning');return}if(state.coins<25){notify('돌봄교실 이용료 25M이 필요해요.','warning');return}state.coins-=25;p().sitterUntil=Date.now()+8*HOUR;care('돌봄교실에 8시간 맡겼어요.');}
@@ -213,17 +218,26 @@
   };
   const palette={1:'#243927',2:'#eaf3c7',3:'#4f9b9b',4:'#ee9ea2',5:'#f7d66a'};
   function drawPet(){const cv=$('petCanvas'),ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);const pet=p();let id=!pet.alive?'ghost':pet.stage==='adult'||pet.stage==='elder'?(pet.form||'friend'):pet.stage;const rows=sprites[id]||sprites.baby;const px=6,x0=32,y0=12+(pet.alive&&pet.stage!=='egg'&&Math.floor(Date.now()/700)%2?2:0);const colors={...palette,3:({scholar:'#79aaca',athlete:'#d8877c',artist:'#dab672',friend:'#74bca3',rough:'#9b90bb'})[id]||palette[3]};
+    const living=pet.alive&&pet.stage!=='egg';
+    ctx.save();if(living&&pet.stats.weight>24){ctx.translate(80,0);ctx.scale(pet.stats.weight>38?1.22:1.11,1);ctx.translate(-80,0)}
     rows.forEach((row,y)=>[...row].forEach((c,x)=>{if(c!=='.'&&colors[c]){ctx.fillStyle=colors[c];ctx.fillRect(x0+x*px,y0+y*px,px,px)}}));
     if(pet.alive&&['scholar','athlete','artist','friend','rough'].includes(id)){ctx.fillStyle=colors[1];if(id==='scholar'){ctx.fillRect(x0+4*px,y0+6*px,4*px,px);ctx.fillRect(x0+10*px,y0+6*px,4*px,px)}if(id==='athlete'){ctx.fillStyle='#f7d66a';ctx.fillRect(x0+4*px,y0+3*px,8*px,px)}if(id==='artist'){ctx.fillStyle='#ee9ea2';ctx.fillRect(x0+3*px,y0+9*px,2*px,px);ctx.fillRect(x0+11*px,y0+9*px,2*px,px)}if(id==='friend'){ctx.fillStyle='#ee9ea2';ctx.fillRect(x0+1*px,y0+5*px,2*px,2*px)}if(id==='rough'){ctx.fillStyle='#f7d66a';ctx.fillRect(x0+12*px,y0+3*px,2*px,px)}}
     if(pet.stage==='egg'&&Math.floor(Date.now()/1000)%2){ctx.fillStyle=palette[1];ctx.fillRect(x0+7*px,y0+5*px,px,px);ctx.fillRect(x0+8*px,y0+6*px,px,px);ctx.fillRect(x0+7*px,y0+7*px,px,px)}
+    if(living){
+      if(hygieneAvg()<50){ctx.fillStyle='#9c7953';[[3,8],[12,9],[5,12]].forEach(([x,y])=>ctx.fillRect(x0+x*px,y0+y*px,px,px))}
+      if(reaction?.kind==='fed'){ctx.fillStyle='#fff7d5';[[7,9],[8,9],[9,10]].forEach(([x,y])=>ctx.fillRect(x0+x*px,y0+y*px,px,px))}
+      if(reaction?.kind==='clean'){ctx.fillStyle='#fff6a0';[[0,4],[15,3],[1,12],[14,12]].forEach(([x,y])=>{ctx.fillRect(x0+x*px,y0+y*px,px,px);ctx.fillRect(x0+(x-.5)*px,y0+(y+.5)*px,2*px,2*px)})}
+      if(pet.stats.energy<25||reaction?.kind==='rest'){ctx.fillStyle='#405e76';ctx.font='bold 16px monospace';ctx.fillText('Z',x0+14*px,y0+2*px)}
+    }
+    ctx.restore();
     if(pet.illness&&pet.alive){ctx.fillStyle='#df6d73';ctx.fillRect(123,17,7,21);ctx.fillRect(123,44,7,7)}
   }
   function statRow(label,value,inverse=false){const shown=cap(value),bad=inverse?shown>75:shown<25,mid=inverse?shown>50:shown<50;return `<div class="meter-row"><b>${label}</b><span class="meter ${bad?'danger':mid?'warn':''}"><i style="width:${shown}%"></i></span><b>${Math.round(shown)}</b></div>`}
   function card(title,desc,action,id,disabled=false,button='선택'){return `<div class="card"><strong>${title}</strong><small>${desc}</small><button type="button" data-action="${action}" data-id="${id||''}" ${disabled?'disabled':''}>${button}</button></div>`}
   function action(title,desc,act,id,disabled=false){return `<button type="button" class="action" data-action="${act}" data-id="${id||''}" ${disabled?'disabled':''}><span><strong>${title}</strong><small>${desc}</small></span><span class="arrow">›</span></button>`}
   function renderTabs(){const tabs=[['care','🏠 돌보기'],['school','📚 학교'],['play','🎮 놀이'],['life','✨ 생활'],['shop','🛒 상점'],['family','👪 가족'],['album','📖 기록'],['status','📊 상태']];const primary=['care','school','play','shop'];const extra=tabs.filter(([id])=>!primary.includes(id));const button=([id,label])=>`<button type="button" data-tab="${id}" class="${tab===id?'active':''}">${label}</button>`;$('tabs').innerHTML=`<div class="desktop-main">${tabs.map(button).join('')}</div><div class="mobile-main">${tabs.filter(([id])=>primary.includes(id)).map(button).join('')}<button type="button" data-more="1" class="${menuOpen||extra.some(([id])=>id===tab)?'active':''}">☰ 더보기</button></div><div class="mobile-extra" ${menuOpen?'':'hidden'}>${extra.map(button).join('')}</div>`}
-  function renderTop(){const pet=p(),st=pet.stats;drawPet();$('petName').textContent=pet.name;$('generation').textContent=`${pet.generation}세대 · ${stageLabel(pet.stage)}`;$('coinLabel').textContent=`🪙 ${state.coins}M`;$('stageLabel').textContent=stageLabel(pet.stage);$('ageLabel').textContent=`${Math.floor(ageMinutes()/1440)}일`;$('clockLabel').textContent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});$('foodStat').textContent=`🍚 ${Math.round(st.satiety/25)}/4`;$('moodStat').textContent=`♥ ${Math.round(st.mood/25)}/4`;$('energyStat').textContent=`⚡ ${Math.round(st.energy/25)}/4`;$('soundButton').textContent=state.sound?'🔊 소리':'🔇 소리';$('sceneBadge').hidden=!(pet.poop||pet.illness||!pet.alive);$('sceneBadge').textContent=!pet.alive?'☆':pet.illness?'!':pet.poop?'♠':'';
-    let speech=pet.alive?pet.stage==='egg'?`부화까지 약 ${Math.max(0,Math.ceil(5-ageMinutes()))}분`:pet.illness?`${pet.illness}에 걸렸어…`:st.satiety<25?'배고파!':st.stress>70?'좀 쉬고 싶어…':st.mood<30?'같이 놀자!':pet.skills.speech>60?'오늘은 무엇을 함께 해볼까?':pet.skills.speech>25?'안녕! 같이 놀자!':'삐! 삐!':'별이 되었어요 · 추억 앨범을 확인하세요';$('speech').textContent=speech;
+  function renderTop(){const pet=p(),st=pet.stats;drawPet();document.querySelector('.world').classList.toggle('room-dirty',pet.alive&&pet.poop>0);$('petName').textContent=pet.name;$('generation').textContent=`${pet.generation}세대 · ${stageLabel(pet.stage)}`;$('coinLabel').textContent=`🪙 ${state.coins}M`;$('stageLabel').textContent=stageLabel(pet.stage);$('ageLabel').textContent=`${Math.floor(ageMinutes()/1440)}일`;$('clockLabel').textContent=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});$('foodStat').textContent=`🍚 ${Math.round(st.satiety/25)}/4`;$('moodStat').textContent=`♥ ${Math.round(st.mood/25)}/4`;$('energyStat').textContent=`⚡ ${Math.round(st.energy/25)}/4`;$('soundButton').textContent=state.sound?'🔊 소리':'🔇 소리';$('sceneBadge').hidden=!(pet.poop||pet.illness||!pet.alive);$('sceneBadge').textContent=!pet.alive?'☆':pet.illness?'!':pet.poop?'♠':'';
+    let speech=pet.alive?pet.stage==='egg'?`부화까지 약 ${Math.max(0,Math.ceil(5-ageMinutes()))}분`:pet.illness?`${pet.illness}에 걸렸어…`:st.satiety<25?'배고파!':st.stress>70?'좀 쉬고 싶어…':st.mood<30?'같이 놀자!':pet.skills.speech>60?'오늘은 무엇을 함께 해볼까?':pet.skills.speech>25?'안녕! 같이 놀자!':'삐! 삐!':'별이 되었어요 · 추억 앨범을 확인하세요';$('speech').textContent=pet.alive&&pet.stage!=='egg'&&reaction?reaction.text:speech;
     if(!notice){notice=pet.illness?`${pet.illness} 치료와 휴식이 필요해요.`:st.health<25?'건강이 위중해요. 바로 돌봐주세요.':st.satiety<25?'배고파요. 먹이를 주세요.':st.stress>70?'스트레스가 높아요. 쉬거나 이야기해 주세요.':`오늘의 돌봄은 1~2분이면 충분해요. · ${state.coins}M`}
     const level=st.health<25?'danger':pet.illness||st.satiety<25||st.stress>70?'warning':'';$('notice').textContent=notice;$('notice').className='notice '+level;
   }
@@ -294,7 +308,7 @@
       const reward=Math.min(140,Math.round(score*(pet.gameToday<3?7:3)));state.coins+=reward;pet.gameToday++;
       changeStat({mood:Math.min(22,score*2+3),energy:-Math.max(4,Math.min(18,score+3)),stress:-Math.min(14,score*2),bond:Math.min(8,score)});
       if(['catch','jump'].includes(result.id))changeStat({fitness:Math.min(5,score)});if(result.id==='quiz'||result.id==='memory')changeStat({intellect:Math.min(5,score)});
-      care(`${gameNames.find(x=>x.id===result.id)?.name||'놀이'} ${score}점 · ${reward}M 획득`);
+      react('play',score>0?'재밌었어! 또 놀자!':'다음엔 더 잘할래!');care(`${gameNames.find(x=>x.id===result.id)?.name||'놀이'} ${score}점 · ${reward}M 획득`);
     }else if(result.kind==='school'){
       const subject=subjects.find(x=>x.id===result.id);pet.schoolToday++;const reward=6+score*8;state.coins+=reward;
       changeStat({[subject.skill]:2+score*2,energy:-8,stress:score>=2?2:6,mood:score>=2?4:0});
@@ -302,13 +316,13 @@
     }else if(result.kind==='hygiene'){
       const h=hygiene.find(x=>x.id===result.id);const bonus=(h.part==='teeth'&&has('toothbrush'))||(h.part!=='teeth'&&has('soap'))?10:0;
       pet.hygiene[h.part]=cap(pet.hygiene[h.part]+h.gain+bonus);if(h.part==='body'){pet.hygiene.hands=cap(pet.hygiene.hands+10);pet.hygiene.feet=cap(pet.hygiene.feet+10)}
-      changeStat({stress:-4,life:1});care(`${h.name} 완료 · 게임 속 ${h.secs}초가 흘렀어요.`);
+      changeStat({stress:-4,life:1});react('clean','반짝반짝! 개운해!');care(`${h.name} 완료 · 게임 속 ${h.secs}초가 흘렀어요.`);
     }else if(result.kind==='exercise'){
       const e=exercises.find(x=>x.id===result.id),over=pet.exerciseToday>=2;
       if(score<1){st.energy=cap(st.energy-3);care(`${e.name}을 끝내지 못했어요. 다시 직접 움직여 보세요.`);return}
       st.energy=cap(st.energy-e.effort*(over?1.5:1));st.stress=cap(st.stress+e.stress+(over?9:0));st.satiety=cap(st.satiety-7);st.weight=cap(st.weight-(over?.3:.7),4,80);st.mood=cap(st.mood+4);
       pet.skills.fitness=cap(pet.skills.fitness+e.fitness);pet.hygiene[e.dirt]=cap(pet.hygiene[e.dirt]-e.dirtAmt);pet.exerciseToday++;
-      if(over&&st.energy<20)pet.illness='근육통';care(`${e.name} 직접 플레이 완료 · ${over?'과한 운동으로 피로가 쌓였어요.':'체력이 올랐어요.'}`);
+      if(over&&st.energy<20)pet.illness='근육통';react('rest',over?'헉헉… 너무 힘들어!':'후우! 몸이 가벼워!');care(`${e.name} 직접 플레이 완료 · ${over?'과한 운동으로 피로가 쌓였어요.':'체력이 올랐어요.'}`);
     }
   }});
   function openMiniScene(id){if(!canAct())return;if(p().stats.energy<10){notify('기운이 부족해요. 조금 쉬고 놀아요.','warning');return}closeDialog();activityEngine.start('mini',id)}
