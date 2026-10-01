@@ -1,0 +1,2 @@
+# motchi-tamagotchi
+MOTCHI
