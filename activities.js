@@ -70,7 +70,8 @@ window.MotchiActivities = (() => {
     }
      function hintText(t){return ({bricks:'바를 드래그해 공 받기',catch:'움직여 떨어지는 공 받기',jump:'줄이 올 때 터치해 점프',memory:'빛나는 순서를 기억해 터치',quiz:'정답을 직접 터치'})[t.id]||'화면을 터치해 놀아요'}
      function hint(t){
-      const h=t.kind==='mini'?({bricks:'바를 좌우로 드래그해 공을 받아 벽돌을 깨세요.',catch:'캐릭터를 좌우로 움직여 떨어지는 공을 받으세요.',jump:'줄이 발에 올 때 화면을 눌러 직접 점프하세요.',memory:t.phase==='show'?'빛나는 발판의 순서를 기억하세요.':'기억한 순서대로 발판을 터치하세요.',quiz:'움직이는 정답 공을 터치하세요.'})[t.id]:t.kind==='school'?'답 카드를 위쪽 상자로 끌어다 놓으세요.':t.kind==='hygiene'?['비누를 바르듯 문질러요.','구석구석 문질러요.','물을 끼얹듯 문질러요.'][t.phaseIndex]:({walk:'캐릭터를 드래그해 반짝이는 길을 걸어요.',stretch:'화면이나 버튼을 꾹 눌러 자세를 유지해요.',jump:'줄이 발에 올 때 화면을 눌러 점프하세요.',ball:'움직이는 공을 직접 터치해 받아요.',swim:'좌우 번갈아 손가락을 밀어 헤엄쳐요.'})[t.id];setHint(h||'화면을 터치해 함께 놀아요.')
+       const wash={hands:['손바닥을 문질러 비누칠해요.','손등과 손가락 사이를 문질러요.','물을 흘려 손을 헹궈요.'],face:['얼굴에 물을 묻혀요.','양볼을 부드럽게 문질러요.','물로 얼굴을 헹궈요.'],teeth:['입을 벌리고 칫솔을 양쪽으로 5초 문질러요.','컵을 터치해서 입을 헹궈요.'],feet:['발등을 문질러요.','발가락 사이를 씻어요.','발을 물로 헹궈요.'],body:['몸에 물을 뿌려요.','샤워 거품을 문질러요.','머리부터 물로 헹궈요.']};
+       const h=t.kind==='mini'?({bricks:'바를 좌우로 드래그해 공을 받아 벽돌을 깨세요.',catch:'캐릭터를 좌우로 움직여 떨어지는 공을 받으세요.',jump:'줄이 발에 올 때 화면을 눌러 직접 점프하세요.',memory:t.phase==='show'?'빛나는 발판의 순서를 기억하세요.':'기억한 순서대로 발판을 터치하세요.',quiz:'움직이는 정답 공을 터치하세요.'})[t.id]:t.kind==='school'?'답 카드를 위쪽 상자로 끌어다 놓으세요.':t.kind==='hygiene'?wash[t.id]?.[t.phaseIndex]:({walk:'캐릭터를 드래그해 반짝이는 길을 걸어요.',stretch:'화면이나 버튼을 꾹 눌러 자세를 유지해요.',jump:'줄이 발에 올 때 화면을 눌러 점프하세요.',ball:'움직이는 공을 직접 터치해 받아요.',swim:'좌우 번갈아 손가락을 밀어 헤엄쳐요.'})[t.id];setHint(h||'화면을 터치해 함께 놀아요.')
     }
      function nextMemory(t){t.phase='show';t.sequence=Array.from({length:Math.min(3+t.round,6)},()=>rand(3));t.input=0;t.showTime=0}
     function complete(){if(!task||task.phase==='finish')return;const t=task;t.phase='finish';setHint(`${labels[t.id]} 완료! ${t.score}점 · 잠시 후 돌아갑니다.`);tone?.(770);setTimeout(()=>{if(task!==t)return;const result={kind:t.kind,id:t.id,score:t.score,misses:t.misses,round:t.round};stop(false);onComplete(result)},900)}
@@ -143,6 +144,13 @@ window.MotchiActivities = (() => {
       else if(t.kind==='exercise'&&t.id==='stretch'){pet(195,330,120,t.holding?'stretch':'stand');rect(64,449,262,17,'#4c6b55');rect(68,453,254*(t.hold/1.15),9,'#f1d174');text(`${t.score}/3자세`,195,138,19)}
       else if(t.kind==='exercise'&&t.id==='ball'){pet(145,390,100);const b=t.ball;rect(b.x-23,b.y-23,46,46,'#33534a');rect(b.x-19,b.y-19,38,38,'#f6df9a');rect(b.x-5,b.y-19,10,38,'#fff9e8');text(`${t.score}/5번 공 받기`,195,136,19)}
       else if(t.kind==='exercise'&&t.id==='swim'){pet(t.petX,330,100,'swim');text(`${t.score}/6번 헤엄치기`,195,142,19);text(t.lastDirection<0?'다음은 →':'다음은 ←',195,438,19)}
+       if(t.kind==='hygiene'&&t.id!=='teeth'){
+         if(t.id==='body'){rect(86,168,80,11,'#849da1');rect(86,168,11,34,'#849da1');for(let i=0;i<8;i++)rect(90+i*10,208+(i%3)*9,4,19,'#9fd9e7')}
+         if(t.id==='face'){rect(145,257,19,9,'#b9e9f3');rect(225,257,19,9,'#b9e9f3');text('세수',195,572,18)}
+         if(t.id==='hands'){rect(97,334,44,16,'#f7d0a1');rect(248,334,44,16,'#f7d0a1');text('손 씻기',195,572,18)}
+         if(t.id==='feet'){rect(122,388,42,14,'#e8b594');rect(226,388,42,14,'#e8b594');text('발 씻기',195,572,18)}
+         for(let i=0;i<Math.floor(t.progress/20);i++){const x=104+(i*47)%184,y=275+(i*31)%128;rect(x,y,8,8,'#fffdf0')}
+       }
        if(t.intro>0){rect(20,206,350,230,'#36584cf2');text(labels[t.id],195,250,25,'#fff7d9');text((t.intro>4?hintText(t):t.intro>1?String(Math.ceil(t.intro-1)):'시~작!'),195,320,t.intro>4?15:32,'#fff7d9');text('30초 동안 직접 플레이',195,390,17,'#fff7d9')}
        if(t.phase==='finish'){rect(26,254,338,104,'#36584ce9');text('잘했어! '+t.score+'점',195,319,27,'#fff7d9')}
        scoreLabel.textContent=t.kind==='mini'?`${Math.max(0,Math.ceil(30-t.elapsed))}초 · ${t.score}점`:t.kind==='school'?`${t.score}점`:`${t.score}회`;
