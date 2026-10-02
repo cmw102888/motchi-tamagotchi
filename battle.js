@@ -62,12 +62,13 @@
         for(let i=0;i<24;i++){ctx.fillStyle=i%2?'#93bb8d':'#6e9f80';ctx.fillRect((i*79)%390,118+((i*137)%500),35,8)}
         ctx.fillStyle='#fff9e9';ctx.fillRect(12,12,366,88);
         ctx.fillStyle='#34404d';ctx.font='bold 20px sans-serif';ctx.fillText(`${r.stage}-${r.wave===5?'Final':r.wave}  ${names[r.stage-1]}`,25,39);
-        ctx.font='bold 15px sans-serif';ctx.fillText(`${Math.ceil(time)}초  ·  몬스터 ${r.kills}/25  ·  콤보 ${r.combo}`,25,64);
+        ctx.font='bold 15px sans-serif';ctx.fillText(`${Math.ceil(time)}초  ·  몬스터 ${r.kills}/25  ·  콤보 ${r.combo}  ·  무기 Lv.${s.weaponLevel||0}`,25,64);
         ctx.fillStyle='#d5d5d1';ctx.fillRect(25,75,335,12);ctx.fillStyle=r.hp<30?'#e96866':'#6bb894';ctx.fillRect(25,75,335*clamp(r.hp/100,0,1),12);
         r.monsters.forEach((m,i)=>{if(!m.alive)return;const x=m.x+Math.sin(now/530+i)*3,y=m.y+Math.sin(now/440+i)*2;sprite(x,y,m.boss,now/250+m.phase);ctx.fillStyle='#463f4a';ctx.fillRect(x-(m.boss?16:11),y+(m.boss?19:13),m.boss?32:22,4);ctx.fillStyle='#f08372';ctx.fillRect(x-(m.boss?16:11),y+(m.boss?19:13),(m.boss?32:22)*clamp(m.hp/m.max,0,1),4)});
-        const px=195+Math.sin(now/100)*5,py=535;
-        ctx.fillStyle='#4a4550';ctx.fillRect(px-19,py-22,38,40);ctx.fillStyle='#fff1c4';ctx.fillRect(px-16,py-20,32,35);
-        ctx.fillStyle='#3d4049';ctx.fillRect(px-8,py-4,4,4);ctx.fillRect(px+6,py-4,4,4);ctx.fillRect(px-3,py+8,8,3);
+        const px=195+Math.sin(now/100)*5,py=535,col=['#74bca3','#e5a1aa','#91a8d7','#e5bc72','#b8a1c7'][s.starter||0];
+        ctx.fillStyle='#34404d';ctx.fillRect(px-12,py-31,24,6);ctx.fillRect(px-18,py-25,36,6);ctx.fillRect(px-24,py-19,48,30);ctx.fillRect(px-18,py+11,36,6);ctx.fillRect(px-14,py+17,8,8);ctx.fillRect(px+6,py+17,8,8);
+        ctx.fillStyle=col;ctx.fillRect(px-12,py-25,24,6);ctx.fillRect(px-18,py-19,36,30);ctx.fillRect(px-12,py+11,24,6);
+        ctx.fillStyle='#34404d';ctx.fillRect(px-10,py-4,4,4);ctx.fillRect(px+6,py-4,4,4);ctx.fillRect(px-3,py+7,8,3);
         ctx.font='30px sans-serif';ctx.fillText(s.weaponIcon||'🏋️',px+21,py+3);
         if(now-r.slash<100&&r.hit){ctx.strokeStyle='#fff7c1';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(px+24,py-25);ctx.lineTo(r.hit.x,r.hit.y);ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 16px sans-serif';ctx.fillText('연타!',px-20,py-36)}
         ctx.fillStyle='#fff9e9';ctx.fillRect(8,590,374,52);ctx.fillStyle='#34404d';ctx.font='14px sans-serif';ctx.fillText('모찌가 빠르게 자동 공격해요 · 돌봄과 장비가 전투에 반영돼요',18,621);
