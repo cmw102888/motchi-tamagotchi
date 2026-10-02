@@ -9,7 +9,7 @@
   <link rel="icon" href="./icon-192.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./icon-192.svg">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./style.css?v=10">
+  <link rel="stylesheet" href="./style.css?v=11">
   <title>MOTCHI LIFE</title>
 </head>
 <body>
@@ -27,7 +27,8 @@
       <div class="world-actions right"><button type="button" data-action="talk">💬<small>대화</small></button><button type="button" data-action="rest">🛌<small>휴식</small></button><button type="button" data-action="treat">💊<small>치료</small></button></div>
       <div class="pet-scene"><canvas id="petCanvas" width="160" height="128" role="img" aria-label="도트 캐릭터"></canvas><span id="sceneBadge" class="scene-badge" hidden></span></div>
       <div id="speech" class="speech" aria-live="polite">모찌가 기다려요</div>
-      <div class="quick-stats"><span id="foodStat">🍚 4/4</span><span id="moodStat">♥ 4/4</span><span id="energyStat">⚡ 4/4</span></div>
+      <div class="quick-stats"><span id="foodStat">🍚 100/100</span><span id="moodStat">♥ 100/100</span><span id="energyStat">☀ 100/100</span><span id="stressStat">스트레스 0/100</span></div>
+      <button class="challenge-button" type="button" data-action="challenge">⚔️ 도전 <small id="challengeLabel">1-1</small></button>
     </section>
     <section class="interface">
       <div id="notice" class="notice" aria-live="polite"></div>
@@ -43,8 +44,10 @@
       <div id="activityControls" class="activity-controls"></div>
     </div>
   </section>
+  <section id="battleLayer" class="battle-layer" aria-label="도전 전투 화면" hidden><div class="battle-stage"><button id="battleExit" type="button">← 집으로</button><canvas id="battleCanvas" width="390" height="650" aria-label="자동 전투"></canvas></div></section>
   <div id="dialogLayer" class="dialog-layer" hidden><div id="dialog" class="dialog" role="dialog" aria-modal="true"></div></div>
-  <script src="./activities.js?v=10" defer></script>
-  <script src="./game.js?v=10" defer></script>
+  <script src="./activities.js?v=11" defer></script>
+  <script src="./battle.js?v=11" defer></script>
+  <script src="./game.js?v=11" defer></script>
 </body>
 </html>

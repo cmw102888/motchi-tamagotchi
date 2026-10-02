@@ -42,15 +42,15 @@ window.MotchiActivities = (() => {
     function setHint(message){instructions.textContent=message}
     function start(kind,id){
       if(task)return false;
-      task={kind,id,score:0,misses:0,elapsed:0,phase:'play',round:0,selected:0,started:performance.now()};
+       task={kind,id,score:0,misses:0,elapsed:0,intro:kind==='mini'?5:0,phase:'play',round:0,selected:0,started:performance.now()};
       const t=task;
       if(kind==='mini'&&id==='bricks')Object.assign(t,{paddle:195,ball:{x:195,y:385,vx:138,vy:-185},bricks:Array.from({length:5},()=>Array(6).fill(true)),lives:3});
       if((kind==='mini'&&id==='jump')||(kind==='exercise'&&id==='jump'))Object.assign(t,{rope:0,jumpTime:0,target:kind==='mini'?8:5});
       if(kind==='mini'&&id==='catch')Object.assign(t,{petX:195,balls:[],spawned:0,spawnClock:0});
       if(kind==='mini'&&id==='memory')nextMemory(t);
-      if(kind==='mini'&&id==='quiz')Object.assign(t,{questions:Array.from({length:5},()=>allQuestions[rand(allQuestions.length)]),bubbleClock:0});
+       if(kind==='mini'&&id==='quiz')Object.assign(t,{questions:Array.from({length:40},()=>allQuestions[rand(allQuestions.length)]),bubbleClock:0});
       if(kind==='school')Object.assign(t,{drag:null,questionSet:questions[id]||questions.korean});
-      if(kind==='hygiene')Object.assign(t,{phaseIndex:0,progress:0,stroke:null});
+       if(kind==='hygiene')Object.assign(t,{phaseIndex:0,progress:0,stroke:null,teethRub:0,brushX:195,lastStroke:0});
       if(kind==='exercise'&&id==='walk')Object.assign(t,{petX:80,targets:[290,80,310,165]});
       if(kind==='exercise'&&id==='stretch')Object.assign(t,{hold:0,holding:false});
       if(kind==='exercise'&&id==='ball')Object.assign(t,{ball:{x:80,y:310,vx:145,vy:75}});
@@ -68,16 +68,17 @@ window.MotchiActivities = (() => {
       if(t.kind==='exercise'&&t.id==='stretch')return [['누르고 있기','hold']];
       return [];
     }
-    function hint(t){
+     function hintText(t){return ({bricks:'바를 드래그해 공 받기',catch:'움직여 떨어지는 공 받기',jump:'줄이 올 때 터치해 점프',memory:'빛나는 순서를 기억해 터치',quiz:'정답을 직접 터치'})[t.id]||'화면을 터치해 놀아요'}
+     function hint(t){
       const h=t.kind==='mini'?({bricks:'바를 좌우로 드래그해 공을 받아 벽돌을 깨세요.',catch:'캐릭터를 좌우로 움직여 떨어지는 공을 받으세요.',jump:'줄이 발에 올 때 화면을 눌러 직접 점프하세요.',memory:t.phase==='show'?'빛나는 발판의 순서를 기억하세요.':'기억한 순서대로 발판을 터치하세요.',quiz:'움직이는 정답 공을 터치하세요.'})[t.id]:t.kind==='school'?'답 카드를 위쪽 상자로 끌어다 놓으세요.':t.kind==='hygiene'?['비누를 바르듯 문질러요.','구석구석 문질러요.','물을 끼얹듯 문질러요.'][t.phaseIndex]:({walk:'캐릭터를 드래그해 반짝이는 길을 걸어요.',stretch:'화면이나 버튼을 꾹 눌러 자세를 유지해요.',jump:'줄이 발에 올 때 화면을 눌러 점프하세요.',ball:'움직이는 공을 직접 터치해 받아요.',swim:'좌우 번갈아 손가락을 밀어 헤엄쳐요.'})[t.id];setHint(h||'화면을 터치해 함께 놀아요.')
     }
-    function nextMemory(t){t.phase='show';t.sequence=Array.from({length:3+t.round},()=>rand(3));t.input=0;t.showTime=0}
+     function nextMemory(t){t.phase='show';t.sequence=Array.from({length:Math.min(3+t.round,6)},()=>rand(3));t.input=0;t.showTime=0}
     function complete(){if(!task||task.phase==='finish')return;const t=task;t.phase='finish';setHint(`${labels[t.id]} 완료! ${t.score}점 · 잠시 후 돌아갑니다.`);tone?.(770);setTimeout(()=>{if(task!==t)return;const result={kind:t.kind,id:t.id,score:t.score,misses:t.misses,round:t.round};stop(false);onComplete(result)},900)}
     function stop(cancel=true){if(!task)return;cancelAnimationFrame(raf);task=null;pointer=null;layer.hidden=true;document.body.classList.remove('in-activity');controls.innerHTML='';if(cancel)onCancel?.()}
-    function jump(){if(!task||task.phase==='finish')return;task.jumpTime=.58;tone?.(650)}
-    function choose(index){const t=task;if(!t||t.phase==='finish')return;
-      if(t.kind==='mini'&&t.id==='memory'){if(t.phase!=='input')return;if(index===t.sequence[t.input]){t.input++;tone?.(700);if(t.input===t.sequence.length){t.score+=t.sequence.length;t.round++;if(t.round>=3)complete();else{nextMemory(t);hint(t)}}}else{t.misses++;t.round++;tone?.(250);if(t.round>=3)complete();else{nextMemory(t);hint(t)}}}
-      else if(t.kind==='mini'&&t.id==='quiz'){const q=t.questions[t.round];if(index===q[2]){t.score++;tone?.(700)}else{t.misses++;tone?.(260)}t.round++;if(t.round>=5)complete()}
+     function jump(){if(!task||task.phase==='finish'||task.intro>0)return;task.jumpTime=.58;tone?.(650)}
+     function choose(index){const t=task;if(!t||t.phase==='finish'||t.intro>0)return;
+       if(t.kind==='mini'&&t.id==='memory'){if(t.phase!=='input')return;if(index===t.sequence[t.input]){t.input++;tone?.(700);if(t.input===t.sequence.length){t.score+=t.sequence.length;t.round++;nextMemory(t);hint(t)}}else{t.misses++;t.round++;tone?.(250);nextMemory(t);hint(t)}}
+       else if(t.kind==='mini'&&t.id==='quiz'){const q=t.questions[t.round%t.questions.length];if(index===q[2]){t.score++;tone?.(700)}else{t.misses++;tone?.(260)}t.round++}
       else if(t.kind==='school'){const q=t.questionSet[t.round];if(index===q[2]){t.score++;tone?.(700)}else{t.misses++;tone?.(260)}t.round++;t.drag=null;if(t.round>=3)complete()}
     }
     function act(key){const t=task;if(!t||t.phase==='finish')return;if(key==='info')return;
@@ -87,14 +88,14 @@ window.MotchiActivities = (() => {
       if(['0','1','2'].includes(key)){choose(Number(key));return}
     }
     function walkTo(t,x){t.petX=clamp(x,32,358);const target=t.targets[t.score];if(target!==undefined&&Math.abs(t.petX-target)<28){t.score++;tone?.(670);if(t.score>=t.targets.length)complete()}}
-    function pointerDown(e){const t=task;if(!t||t.phase==='finish')return;const p=pos(e);pointer={x:p.x,y:p.y,startX:p.x,startY:p.y};canvas.setPointerCapture?.(e.pointerId);
+     function pointerDown(e){const t=task;if(!t||t.phase==='finish'||t.intro>0)return;const p=pos(e);pointer={x:p.x,y:p.y,startX:p.x,startY:p.y};canvas.setPointerCapture?.(e.pointerId);
       if(t.id==='bricks')t.paddle=clamp(p.x,48,342);
       else if(t.kind==='mini'&&t.id==='catch')t.petX=clamp(p.x,30,360);
       else if(t.id==='jump')jump();
       else if(t.kind==='mini'&&t.id==='memory'){if(p.y>265&&p.y<435)choose(clamp(Math.floor(p.x/130),0,2))}
       else if(t.kind==='mini'&&t.id==='quiz'){if(p.y>220&&p.y<410)choose(clamp(Math.floor(p.x/130),0,2))}
       else if(t.kind==='school'){if(p.y>350&&p.y<470)t.drag={index:clamp(Math.floor(p.x/130),0,2),x:p.x,y:p.y}}
-      else if(t.kind==='hygiene')t.stroke=p;
+       else if(t.kind==='hygiene'){if(t.id==='teeth'&&t.phaseIndex===1&&p.x>245&&p.y>410){t.score=2;complete();return}t.stroke=p}
       else if(t.id==='walk')walkTo(t,p.x);
       else if(t.id==='stretch')t.holding=true;
       else if(t.id==='ball'){const b=t.ball;if(Math.hypot(p.x-b.x,p.y-b.y)<60){t.score++;tone?.(730);b.x=55+rand(280);b.y=180+rand(210);if(t.score>=5)complete()}else{t.misses++;tone?.(270)}}
@@ -103,7 +104,7 @@ window.MotchiActivities = (() => {
       if(t.id==='bricks')t.paddle=clamp(p.x,48,342);
       else if(t.kind==='mini'&&t.id==='catch')t.petX=clamp(p.x,30,360);
       else if(t.kind==='school'&&t.drag){t.drag.x=p.x;t.drag.y=p.y}
-      else if(t.kind==='hygiene'&&t.stroke){const d=Math.hypot(p.x-t.stroke.x,p.y-t.stroke.y);if(d>5&&p.y>130&&p.y<500){t.progress+=Math.min(d,65);t.stroke=p;if(t.progress>=250){t.score++;t.phaseIndex++;t.progress=0;t.stroke=null;tone?.(720);if(t.phaseIndex>=3)complete();else hint(t)}}}
+       else if(t.kind==='hygiene'&&t.stroke){const d=Math.hypot(p.x-t.stroke.x,p.y-t.stroke.y);if(t.id==='teeth'){if(t.phaseIndex===0&&d>6&&p.y>190&&p.y<430){const now=performance.now();t.teethRub+=Math.min(.18,Math.max(.025,(now-(t.lastStroke||now-60))/1000));t.lastStroke=now;t.brushX=clamp(p.x,105,285);t.stroke=p;if(t.teethRub>=5){t.phaseIndex=1;t.stroke=null;tone?.(720);setHint('컵을 터치해서 입을 헹궈요.')}}}else if(d>5&&p.y>130&&p.y<500){t.progress+=Math.min(d,65);t.stroke=p;if(t.progress>=250){t.score++;t.phaseIndex++;t.progress=0;t.stroke=null;tone?.(720);if(t.phaseIndex>=3)complete();else hint(t)}}}
       else if(t.id==='walk')walkTo(t,p.x);
       pointer.x=p.x;pointer.y=p.y;
     }
@@ -114,17 +115,16 @@ window.MotchiActivities = (() => {
       if(t.kind==='hygiene')t.stroke=null;
       pointer=null;
     }
-    function frame(now){const t=task;if(!t)return;const dt=Math.min(.04,Math.max(0,(now-last)/1000));last=now;if(t.phase!=='finish'){t.elapsed+=dt;update(t,dt)}draw(t);raf=requestAnimationFrame(frame)}
+     function frame(now){const t=task;if(!t)return;const dt=Math.min(.04,Math.max(0,(now-last)/1000));last=now;if(t.phase!=='finish'){if(t.intro>0)t.intro=Math.max(0,t.intro-dt);else{t.elapsed+=dt;update(t,dt);if(t.kind==='mini'&&t.elapsed>=30)complete()}}draw(t);raf=requestAnimationFrame(frame)}
     function update(t,dt){
       if(t.kind==='mini'&&t.id==='bricks'){
         const b=t.ball;b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.x<12||b.x>378){b.x=clamp(b.x,12,378);b.vx*=-1}if(b.y<83){b.y=83;b.vy=Math.abs(b.vy)}
-        for(let r=0;r<5;r++)for(let c=0;c<6;c++)if(t.bricks[r][c]){const x=24+c*57,y=112+r*26;if(b.x>x-6&&b.x<x+57&&b.y>y-6&&b.y<y+24){t.bricks[r][c]=false;b.vy*=-1;t.score++;tone?.(550+r*50);if(t.score>=30)complete();r=5;break}}
+         for(let r=0;r<5;r++)for(let c=0;c<6;c++)if(t.bricks[r][c]){const x=24+c*57,y=112+r*26;if(b.x>x-6&&b.x<x+57&&b.y>y-6&&b.y<y+24){t.bricks[r][c]=false;b.vy*=-1;t.score++;tone?.(550+r*50);if(t.bricks.flat().every(v=>!v))t.bricks=Array.from({length:5},()=>Array(6).fill(true));r=5;break}}
         if(b.vy>0&&b.y>465&&b.y<484&&Math.abs(b.x-t.paddle)<52){b.vy=-Math.abs(b.vy)*1.025;b.vx=clamp(b.vx+(b.x-t.paddle)*2.3,-250,250);tone?.(430)}
-        if(b.y>525){t.lives--;t.misses++;if(t.lives<=0)complete();else t.ball={x:t.paddle,y:390,vx:(rand(2)?1:-1)*135,vy:-180}}
-        if(t.elapsed>75)complete();
+         if(b.y>525){t.lives=Math.max(0,t.lives-1);t.misses++;t.ball={x:t.paddle,y:390,vx:(rand(2)?1:-1)*135,vy:-180}}
       }
-      else if(t.id==='jump'){t.jumpTime=Math.max(0,t.jumpTime-dt);t.rope+=dt*.8;if(t.rope>=1){t.rope-=1;if(t.jumpTime>0){t.score++;tone?.(720)}else{t.misses++;tone?.(240)}if(t.score>=t.target||t.misses>=10)complete()}if(t.elapsed>35)complete()}
-      else if(t.kind==='mini'&&t.id==='catch'){t.spawnClock+=dt;if(t.spawned<10&&t.spawnClock>.82){t.spawnClock=0;t.spawned++;t.balls.push({x:45+rand(300),y:100,vy:135+rand(75)})}for(const b of t.balls)b.y+=b.vy*dt;const keep=[];for(const b of t.balls){if(b.y>420){if(Math.abs(b.x-t.petX)<45){t.score++;tone?.(670)}else{t.misses++;tone?.(230)}}else keep.push(b)}t.balls=keep;if((t.spawned>=10&&!t.balls.length)||t.elapsed>27)complete()}
+       else if(t.id==='jump'){t.jumpTime=Math.max(0,t.jumpTime-dt);t.rope+=dt*.8;if(t.rope>=1){t.rope-=1;if(t.jumpTime>0){t.score++;tone?.(720)}else{t.misses++;tone?.(240)}if(t.kind!=='mini'&&(t.score>=t.target||t.misses>=10))complete()}}
+       else if(t.kind==='mini'&&t.id==='catch'){t.spawnClock+=dt;if(t.spawnClock>.82){t.spawnClock=0;t.spawned++;t.balls.push({x:45+rand(300),y:100,vy:135+rand(75)})}for(const b of t.balls)b.y+=b.vy*dt;const keep=[];for(const b of t.balls){if(b.y>420){if(Math.abs(b.x-t.petX)<45){t.score++;tone?.(670)}else{t.misses++;tone?.(230)}}else keep.push(b)}t.balls=keep}
       else if(t.kind==='mini'&&t.id==='memory'&&t.phase==='show'){t.showTime+=dt;if(t.showTime>t.sequence.length*.65+.65){t.phase='input';hint(t)}}
       else if(t.kind==='mini'&&t.id==='quiz'){t.bubbleClock+=dt}
       else if(t.kind==='exercise'&&t.id==='stretch'&&t.holding){t.hold+=dt;if(t.hold>=1.15){t.hold=0;t.score++;tone?.(720);if(t.score>=3)complete()}}
@@ -136,15 +136,16 @@ window.MotchiActivities = (() => {
       else if(t.id==='jump'){const airborne=t.jumpTime>0;pet(195,350-(airborne?50*Math.sin(Math.PI*(1-t.jumpTime/.58)):0),100,airborne?'jump':'stand');const a=t.rope*TAU;ctx.strokeStyle='#7d5b49';ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(92,353);ctx.quadraticCurveTo(195,353+85*Math.sin(a),298,353);ctx.stroke();rect(88,343,12,22,'#634735');rect(290,343,12,22,'#634735');text(`${t.score}/${t.target}회 · 실수 ${t.misses}/10`,195,132,18)}
       else if(t.id==='catch'&&t.kind==='mini'){pet(t.petX,410,90);for(const b of t.balls){rect(b.x-15,b.y-15,30,30,'#3d6048');rect(b.x-12,b.y-12,24,24,'#f5cd6c');rect(b.x-4,b.y-12,8,24,'#fff2c8')}text(`${t.score}/10개 받기`,195,130,19)}
       else if(t.id==='memory'&&t.kind==='mini'){pet(195,205,90);const highlight=t.phase==='show'?t.sequence[Math.floor(t.showTime/.65)]:-1;text(t.phase==='show'?'순서를 기억하세요':'같은 순서로 터치하세요',195,135,19);for(let i=0;i<3;i++){const x=20+i*125;rect(x,307,105,105,'#38564b');rect(x+6,313,93,93,i===highlight?'#fff1a8':['#e8a0a4','#a6c9e7','#add4a2'][i]);text(['A','B','C'][i],x+52,374,30)}text(`${t.round+1}/3단계 · ${t.input}/${t.sequence.length}`,195,447,16)}
-      else if(t.id==='quiz'&&t.kind==='mini'){const q=t.questions[t.round]||t.questions[4];pet(195,170,75);rect(25,220,340,52,'#fff5dc');text(q[0],195,254,16);for(let i=0;i<3;i++){const x=65+i*128,y=338+18*Math.sin(t.bubbleClock*2+i);rect(x-47,y-37,94,74,'#3b5c4e');rect(x-42,y-32,84,64,['#f4c27b','#a8d0e5','#a8d8ae'][i]);text(q[1][i],x,y+6,15)}text(`${t.round+1}/5문제`,195,447,16)}
+      else if(t.id==='quiz'&&t.kind==='mini'){const q=t.questions[t.round%t.questions.length];pet(195,170,75);rect(25,220,340,52,'#fff5dc');text(q[0],195,254,16);for(let i=0;i<3;i++){const x=65+i*128,y=338+18*Math.sin(t.bubbleClock*2+i);rect(x-47,y-37,94,74,'#3b5c4e');rect(x-42,y-32,84,64,['#f4c27b','#a8d0e5','#a8d8ae'][i]);text(q[1][i],x,y+6,15)}text(`${t.round+1}문제`,195,447,16)}
       else if(t.kind==='school'){const q=t.questionSet[t.round]||t.questionSet[2];pet(70,340,70);rect(21,145,348,112,'#715a44');rect(29,153,332,96,'#4b765f');text(q[0],195,196,18,'#fffbe7');text('정답을 여기로 끌어놓기 ↑',195,230,13,'#fff3b6');for(let i=0;i<3;i++){const x=t.drag?.index===i?t.drag.x:65+i*130,y=t.drag?.index===i?t.drag.y:405;rect(x-53,y-31,106,62,'#584b3a');rect(x-49,y-27,98,54,['#f5c580','#a5d1e9','#add4a2'][i]);text(q[1][i],x,y+6,15)}text(`${t.round+1}/3문제`,195,484,16)}
-      else if(t.kind==='hygiene'){pet(195,315,140);for(let i=0;i<13;i++){const x=45+(i*77)%300,y=170+(i*91)%260;ctx.strokeStyle='#f9fcf0';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,5+(i%3)*5,0,TAU);ctx.stroke()}text(['비누칠','문지르기','헹구기'][t.phaseIndex]||'완료',195,130,22);rect(50,470,290,19,'#4e6d66');rect(54,474,282*(t.progress/250),11,'#8dcbd6');text(`${Math.round(t.progress/250*100)}%`,195,516,17)}
+       else if(t.kind==='hygiene'){pet(195,315,140);if(t.id==='teeth'){rect(181,338,30,16,'#293f38');rect(186,340,20,8,'#fff9e7');rect(t.brushX-25,351,50,8,'#e19d9a');rect(t.brushX-5,344,13,10,'#eaf6ed');for(let i=0;i<Math.floor(t.teethRub*4);i++){const x=138+(i*37)%115,y=350+(i*19)%42;rect(x,y,5+(i%3)*3,5,'#fff');}if(t.phaseIndex===1){rect(270,430,57,55,'#b6dfec');rect(275,432,47,22,'#eafaff');text('컵 터치',298,511,16)}}else{for(let i=0;i<13;i++){const x=45+(i*77)%300,y=170+(i*91)%260;ctx.strokeStyle='#f9fcf0';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,5+(i%3)*5,0,TAU);ctx.stroke()}}text(t.id==='teeth'?(t.phaseIndex?'컵으로 헹구기':'5초 동안 양쪽으로 칫솔질'):['비누칠','문지르기','헹구기'][t.phaseIndex]||'완료',195,130,22);rect(50,470,290,19,'#4e6d66');rect(54,474,282*(t.id==='teeth'?Math.min(1,t.teethRub/5):t.progress/250),11,'#8dcbd6');text(t.id==='teeth'?`${Math.min(5,t.teethRub).toFixed(1)}/5초`:`${Math.round(t.progress/250*100)}%`,195,516,17)}
       else if(t.kind==='exercise'&&t.id==='walk'){for(let i=0;i<4;i++){const x=t.targets[i];rect(x-13,410,26,26,i===t.score?'#f8d86a':'#659a74')}pet(t.petX,360,95);text(`${t.score}/4개 길 찾기`,195,142,19)}
       else if(t.kind==='exercise'&&t.id==='stretch'){pet(195,330,120,t.holding?'stretch':'stand');rect(64,449,262,17,'#4c6b55');rect(68,453,254*(t.hold/1.15),9,'#f1d174');text(`${t.score}/3자세`,195,138,19)}
       else if(t.kind==='exercise'&&t.id==='ball'){pet(145,390,100);const b=t.ball;rect(b.x-23,b.y-23,46,46,'#33534a');rect(b.x-19,b.y-19,38,38,'#f6df9a');rect(b.x-5,b.y-19,10,38,'#fff9e8');text(`${t.score}/5번 공 받기`,195,136,19)}
       else if(t.kind==='exercise'&&t.id==='swim'){pet(t.petX,330,100,'swim');text(`${t.score}/6번 헤엄치기`,195,142,19);text(t.lastDirection<0?'다음은 →':'다음은 ←',195,438,19)}
-      if(t.phase==='finish'){rect(26,254,338,104,'#36584ce9');text('잘했어! '+t.score+'점',195,319,27,'#fff7d9')}
-      scoreLabel.textContent=t.kind==='mini'||t.kind==='school'?`${t.score}점`:`${t.score}회`;
+       if(t.intro>0){rect(20,206,350,230,'#36584cf2');text(labels[t.id],195,250,25,'#fff7d9');text((t.intro>4?hintText(t):t.intro>1?String(Math.ceil(t.intro-1)):'시~작!'),195,320,t.intro>4?15:32,'#fff7d9');text('30초 동안 직접 플레이',195,390,17,'#fff7d9')}
+       if(t.phase==='finish'){rect(26,254,338,104,'#36584ce9');text('잘했어! '+t.score+'점',195,319,27,'#fff7d9')}
+       scoreLabel.textContent=t.kind==='mini'?`${Math.max(0,Math.ceil(30-t.elapsed))}초 · ${t.score}점`:t.kind==='school'?`${t.score}점`:`${t.score}회`;
     }
     canvas.addEventListener('pointerdown',pointerDown);canvas.addEventListener('pointermove',pointerMove);canvas.addEventListener('pointerup',pointerUp);canvas.addEventListener('pointercancel',pointerUp);
     controls.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-ctl]');if(b?.dataset.ctl==='hold'&&task?.id==='stretch')task.holding=true});
