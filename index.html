@@ -9,13 +9,14 @@
   <link rel="icon" href="./icon-192.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./icon-192.svg">
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./style.css?v=13">
+  <link rel="stylesheet" href="./style.css?v=16">
   <title>MOTCHI LIFE</title>
 </head>
 <body>
   <main class="app">
     <section class="world" aria-label="MOTCHI LIFE 플레이 화면">
-      <div class="world-hud"><div><strong id="petName">모찌</strong><small id="generation">1세대</small></div><div class="top-actions"><span id="coinLabel" class="coin-label">🪙 80M</span><button id="soundButton" class="small-button" type="button">🔊 소리</button></div></div>
+      <div class="world-hud"><button id="profileButton" class="profile-button" type="button" aria-expanded="false" aria-controls="profilePanel"><canvas id="profileAvatar" width="40" height="40" aria-hidden="true"></canvas><span><strong id="petName">모찌</strong><small id="generation">1세대</small></span><span aria-hidden="true">▾</span></button><div class="top-actions"><span id="coinLabel" class="coin-label">🪙 80M</span><button id="soundButton" class="small-button" type="button">🔊 소리</button></div></div>
+      <div id="profilePanel" class="profile-panel" hidden></div>
       <div class="room-window" aria-hidden="true"><i></i></div>
       <div class="room-plant" aria-hidden="true"><i></i></div>
       <div class="room-shelf" aria-hidden="true"><i></i></div>
@@ -44,10 +45,10 @@
       <div id="activityControls" class="activity-controls"></div>
     </div>
   </section>
-  <section id="battleLayer" class="battle-layer" aria-label="도전 전투 화면" hidden><div class="battle-stage"><button id="battleExit" type="button">← 집으로</button><canvas id="battleCanvas" width="390" height="650" aria-label="자동 전투"></canvas></div></section>
+  <section id="battleLayer" class="battle-layer" aria-label="도전 전투 화면" hidden><div class="battle-stage"><div class="battle-scene-window"><canvas id="battleCanvas" width="390" height="650" aria-label="자동 전투"></canvas></div><button id="battleExit" type="button">← 집으로</button><div class="battle-upgrades"><div class="battle-upgrade-heading"><strong>모찌 성장</strong><span id="battleWallet">0M</span></div><div id="battleUpgradeCards" class="battle-upgrade-cards"></div></div></div></section>
   <div id="dialogLayer" class="dialog-layer" hidden><div id="dialog" class="dialog" role="dialog" aria-modal="true"></div></div>
-  <script src="./activities.js?v=13" defer></script>
-  <script src="./battle.js?v=13" defer></script>
-  <script src="./game.js?v=13" defer></script>
+  <script src="./activities.js?v=16" defer></script>
+  <script src="./battle-v14.js?v=16" defer></script>
+  <script src="./game.js?v=16" defer></script>
 </body>
 </html>

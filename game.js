@@ -115,7 +115,7 @@
   const p=()=>state.pet;
   function log(text){state.journal.unshift({at:Date.now(),text});state.journal=state.journal.slice(0,80);notice=text;}
   function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch{notice='저장 공간이 부족합니다. 브라우저 데이터를 확인해주세요.'}}
-  function tone(freq=620){if(!state.sound)return;try{audio ||=new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.type='square';o.frequency.value=freq;g.gain.setValueAtTime(.025,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.08);o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+.09)}catch{}}
+  function tone(freq=620){if(!state.sound)return;try{audio ||=new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type='square';o.frequency.value=freq;g.gain.setValueAtTime(.035,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.12);o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+.13)}catch{}}
   function ageMinutes(){return Math.max(0,(Date.now()-p().born)/MIN)}
   function lifeStage(){const m=ageMinutes();return m<5&&(p().eggGauge??100)>0?'egg':m<65?'baby':m<1505?'child':m<5825?'teen':m<14405?'adult':'elder';}
   function stageLabel(id){return ({egg:'알',baby:'베이비',child:'어린이',teen:'청소년',adult:'성체',elder:'노년'})[id]||id}
@@ -268,7 +268,7 @@
   function familyView(){const pet=p(),job=jobs.find(j=>j.id===pet.job);return `<h2 class="section-title">일과 가족</h2><p class="subtle">성체가 되면 직업을 고르고 가족을 꾸릴 수 있습니다. 수입과 함께 피로·스트레스·가족 관계도 달라집니다.</p>${adult()?`<div class="cards">${!job?card('💼 직업 선택','다섯 직업 중 하나를 선택','chooseJob',''):card(`${job.icon} ${job.name}`,`${job.pay}M 기본 수입 · ${job.desc}`,'chooseJob','',false,'직업 변경')}${card('🧰 오늘의 근무',pet.workToday?'오늘 근무 완료':'일하거나 가족과 쉬기','workMenu','',!job||pet.workToday)}${card('💞 배우자',pet.partner?`${pet.partner.name} · 친밀도 ${Math.round(pet.partner.bond)}`:'대화하고 관계를 쌓기','partner','',!pet.alive)}${card('🥚 자녀',pet.child?`${pet.child.name} · 다음 세대 준비 완료`:pet.partner?'결혼 후 자녀를 맞이할 수 있어요':'결혼 후 열림','child','',!pet.alive||!pet.partner)}</div>`:'<p class="subtle">성체가 되면 직업과 가족 메뉴가 열립니다.</p>'}${pet.child?`<div class="row"><span>우리 아이</span><b>${esc(pet.child.name)} · ${esc(pet.child.trait)}</b></div>`:''}`}
   function albumView(){const pet=p();return `<h2 class="section-title">추억 앨범</h2>${!pet.alive?card('🥚 다음 세대 시작',pet.child?'자녀가 부모의 특성을 이어받습니다':'새 알부터 시작합니다','nextGeneration','',false,'새 삶 시작'):''}<div class="stack">${state.family.length?state.family.map(f=>`<div class="row"><span>${esc(f.generation)}세대 ${esc(f.name)} · ${esc(f.form)}</span><b>${f.age}일</b></div>`).join(''):'<p class="subtle">첫 번째 가족 이야기가 진행 중이에요.</p>'}</div><h3 class="section-title">최근 일기</h3>${state.journal.slice(0,20).map(x=>`<div class="log">${new Date(x.at).toLocaleString('ko-KR')} · ${esc(x.text)}</div>`).join('')}`}
   function statusView(){const pet=p(),st=pet.stats,sk=pet.skills;return `<h2 class="section-title">상태와 능력</h2><div class="row"><span>성장 · 성격 · 외형</span><b>${stageLabel(pet.stage)} · ${esc(pet.trait)} · ${esc(pet.form||'미정')}</b></div><div class="row"><span>나이 · 몸무게 · 돌봄 실수</span><b>${Math.floor(ageMinutes()/1440)}일 · ${Math.round(st.weight)}g · ${pet.careMistakes}회</b></div><div class="row"><span>재화 · 도전 진도</span><b>${state.coins}M · 💎${state.gems} · ${state.battle.stage}-${state.battle.wave}</b></div>${statRow('배고픔',st.satiety)}${statRow('행복',st.mood)}${statRow('에너지',st.energy)}${statRow('스트레스',st.stress,true)}${statRow('건강',st.health)}${statRow('면역력',st.immunity)}${statRow('친밀도',st.bond)}<h3 class="section-title">생활 능력</h3>${Object.entries({intellect:'지능',speech:'말하기',fitness:'체력',creativity:'창의력',discipline:'훈육',life:'생활기술',dodge:'회피',luck:'행운'}).map(([k,v])=>statRow(v,sk[k])).join('')}<h3 class="section-title">부위별 청결</h3>${hygiene.map(h=>statRow(h.name,pet.hygiene[h.part])).join('')}<div class="row"><span>현재 질병</span><b>${esc(pet.illness||'없음')}</b></div>`}
-  function render(){renderTop();const world=document.querySelector('.world');world.classList.toggle('has-flower',has('flower'));world.classList.toggle('has-lamp',has('lamp'));renderTabs();const views={care:careView,school:schoolView,play:playView,life:lifeView,shop:shopView,family:familyView,album:albumView,status:statusView};$('screen').innerHTML=(views[tab]||careView)();}
+  function render(){renderTop();const world=document.querySelector('.world');world.classList.toggle('has-flower',has('flower'));world.classList.toggle('has-lamp',has('lamp'));renderTabs();const views={care:careView,school:schoolView,play:playView,life:lifeView,shop:shopView,bag:bagView,family:familyView,album:albumView,status:statusView};$('screen').innerHTML=(views[tab]||careView)();}
   function openDialog(title,body,choices,closable=true){dialogState={choices};$('dialog').innerHTML=`<h2>${esc(title)}</h2><p>${body}</p><div class="buttons-list">${choices.map((x,i)=>`<button type="button" data-choice="${i}">${esc(x.label)}</button>`).join('')}</div>${closable?'<button type="button" class="secondary close" data-close="1">닫기</button>':''}`;$('dialogLayer').hidden=false;}
   function closeDialog(){$('dialogLayer').hidden=true;dialogState=null;game=null;}
   function chooseStarter(){const options=[['🌱 연두 모찌','온순함'],['🌸 분홍 모찌','상냥함'],['🌊 파랑 모찌','호기심'],['☀️ 노랑 모찌','활발함'],['🌙 보라 모찌','장난꾸러기']];openDialog('첫 모찌를 고르세요','알에서 태어날 다섯 친구 중 한 마리를 선택해요.',options.map(([name,trait],i)=>({label:`${name} · ${trait}`,run:()=>{p().starter=i;p().name=name.slice(3);p().trait=trait;save();chooseHouse()}})),false)}
@@ -344,7 +344,7 @@
       const e=exercises.find(x=>x.id===result.id),over=pet.exerciseToday>=2;
       if(score<1){st.energy=cap(st.energy-3);care(`${e.name}을 끝내지 못했어요. 다시 직접 움직여 보세요.`);return}
       st.energy=cap(st.energy-e.effort*(over?1.5:1));st.stress=cap(st.stress+e.stress+(over?9:0));st.satiety=cap(st.satiety-7);st.weight=cap(st.weight-(over?.3:.7),4,80);st.mood=cap(st.mood+4);
-      pet.skills.fitness=cap(pet.skills.fitness+e.fitness);pet.hygiene[e.dirt]=cap(pet.hygiene[e.dirt]-e.dirtAmt);pet.exerciseToday++;
+      pet.skills.fitness=cap(pet.skills.fitness+e.fitness);pet.skills.power=cap((pet.skills.power||0)+Math.max(1,Math.round(e.fitness*.6)));pet.hygiene[e.dirt]=cap(pet.hygiene[e.dirt]-e.dirtAmt);pet.exerciseToday++;
       if(over&&st.energy<20)pet.illness='근육통';react('rest',over?'헉헉… 너무 힘들어!':'후우! 몸이 가벼워!');care(`${e.name} 직접 플레이 완료 · ${over?'과한 운동으로 피로가 쌓였어요.':'체력이 올랐어요.'}`);
     }
   }});
@@ -352,7 +352,52 @@
   function openSchoolScene(id){if(!canAct())return;if(['egg','baby'].includes(p().stage)){notify('어린이가 되면 학교에 갈 수 있어요.');return}if(p().schoolToday>=2){notify('오늘은 수업을 두 번 들었어요. 내일 다시 가요.');return}closeDialog();activityEngine.start('school',id)}
   function openHygieneScene(id){if(!canAct())return;closeDialog();activityEngine.start('hygiene',id)}
   function openExerciseScene(id){if(!canAct())return;const e=exercises.find(x=>x.id===id);if(!e)return;if(e.needs&&!has(e.needs)){notify('운동 기구가 필요해요. 슈퍼마켓에서 구입하세요.','warning');return}if(p().stats.energy<15){notify('너무 지쳤어요. 먼저 쉬어주세요.','warning');return}closeDialog();activityEngine.start('exercise',id)}
-  const battleEngine=window.MotchiBattle.create({snapshot:()=>{const weapon=has(state.equippedWeapon)?state.equippedWeapon:['dumbbell','battleRope','battleBook'].find(has);return {stage:state.battle.stage,wave:state.battle.wave,starter:p().starter||0,fitness:p().skills.fitness,dodge:p().skills.dodge,intellect:p().skills.intellect,energy:p().stats.energy,weapon,weaponLevel:weapon?(state.gearLevels[weapon]||1):0,weaponIcon:weapon==='battleRope'?'🪢':weapon==='battleBook'?'📘':'🏋️'}},tone,onFinish:result=>{if(result.quit){state.battle.wave=1;care('도전을 중단했어요. 다음에는 이 단계의 첫 웨이브부터 시작해요.');return}if(result.win){const reward=12+result.stage*5+result.wave*3;state.coins+=reward;changeStat({fitness:1,dodge:1,energy:-2,stress:2});if(result.wave===5){if(result.stage===10)state.battle.completed=true;else state.battle.stage++;state.battle.wave=1;state.gems+=1;care(`${result.stage}-Final 클리어! ${reward}M과 보석 1개 획득`)}else{state.battle.wave++;care(`${result.stage}-${result.wave} 클리어! ${reward}M 획득`);setTimeout(()=>{if(p().alive)battleEngine.start()},900)}}else{state.battle.wave=1;changeStat({energy:-7,stress:5});care(`${result.stage}-${result.wave} 실패 · ${result.stage}-1부터 다시 도전해요. 모찌는 죽지 않았어요.`)}}});
+  state.battleBoosts={attack:0,speed:0,crit:0,gold:0,...state.battleBoosts};
+  const battleUpgradeData=[
+    {id:'attack',icon:'💪',name:'공격력',effect:'한 번의 타격 +0.8',cost:25},
+    {id:'speed',icon:'💨',name:'연타 속도',effect:'공격 간격 -12ms',cost:35},
+    {id:'crit',icon:'✨',name:'치명타',effect:'치명타 확률 +2%',cost:30},
+    {id:'gold',icon:'🪙',name:'몬스터 돈',effect:'처치 보상 +8%',cost:30}
+  ];
+  let battlePendingCoins=0;
+  const upgradeCost=item=>Math.round(item.cost*Math.pow(1.55,state.battleBoosts[item.id]||0));
+  function renderBattlePanel(){
+    const boosts=state.battleBoosts,interval=Math.max(125,215-boosts.speed*12);
+    const dps=Math.round((3.3+(p().skills.power||0)*.045+(p().skills.fitness||0)*.015+boosts.attack*.8)*1000/interval);
+    $('battleWallet').textContent=`보유 ${state.coins}M · 전투 중 +${battlePendingCoins}M · 기본 DPS 약 ${dps}`;
+    $('battleUpgradeCards').innerHTML=battleUpgradeData.map(item=>{
+      const level=boosts[item.id]||0,cost=upgradeCost(item);
+      return `<div class="battle-upgrade-card"><span class="battle-upgrade-icon">${item.icon}</span><span><strong>${item.name} Lv.${level}</strong><small>${item.effect}</small></span><button type="button" data-battle-upgrade="${item.id}" ${level>=10||state.coins<cost?'disabled':''}>${level>=10?'최대':`${cost}M 강화`}</button></div>`;
+    }).join('');
+  }
+  $('battleUpgradeCards').addEventListener('click',e=>{
+    const button=e.target.closest('[data-battle-upgrade]');if(!button)return;
+    const item=battleUpgradeData.find(x=>x.id===button.dataset.battleUpgrade);if(!item)return;
+    const cost=upgradeCost(item);if(state.battleBoosts[item.id]>=10||state.coins<cost)return;
+    state.coins-=cost;state.battleBoosts[item.id]++;save();renderBattlePanel();renderTop();tone(830);
+  });
+  const battleEngine=window.MotchiBattle.create({snapshot:()=>{const weapon=has(state.equippedWeapon)?state.equippedWeapon:['dumbbell','battleRope','battleBook'].find(has);return {stage:state.battle.stage,wave:state.battle.wave,starter:p().starter||0,fitness:p().skills.fitness,dodge:p().skills.dodge,intellect:p().skills.intellect,energy:p().stats.energy,weapon,weaponLevel:weapon?(state.gearLevels[weapon]||1):0,weaponIcon:weapon==='battleRope'?'🪢':weapon==='battleBook'?'📘':'🏋️'}},tone,onProgress:progress=>{battlePendingCoins=progress.earnedCoins;renderBattlePanel()},onFinish:result=>{
+    const loot=Math.max(0,result.earnedCoins||0);state.coins+=loot;
+    if(result.quit){state.battle.wave=1;care(`도전을 중단했어요. 처치한 몬스터 보상 ${loot}M을 받았어요.`);return}
+    if(result.win){
+      const clearBonus=12+result.stage*5+result.wave*3;state.coins+=clearBonus;
+      changeStat({fitness:1,dodge:1,energy:-2,stress:2});
+      if(result.wave===5){
+        if(result.stage===10)state.battle.completed=true;else state.battle.stage++;
+        state.battle.wave=1;state.gems+=1;
+        care(`${result.stage}-Final 클리어! 몬스터 보상 ${loot}M + 완료 ${clearBonus}M · 보석 1개 획득`);
+      }else{
+        const gemChance=Math.min(.25,.12+(p().skills.luck||0)*.0013),gemFound=Math.random()<gemChance;
+        if(gemFound)state.gems++;
+        state.battle.wave++;
+        care(`${result.stage}-${result.wave} 클리어! 몬스터 보상 ${loot}M + 완료 ${clearBonus}M${gemFound?' · 보석 1개 발견!':''}`);
+        setTimeout(()=>{if(p().alive)battleEngine.start()},900);
+      }
+    }else{
+      state.battle.wave=1;changeStat({energy:-7,stress:5});
+      care(`${result.stage}-${result.wave} 실패 · 처치한 몬스터 보상 ${loot}M 획득 · ${result.stage}-1부터 재도전해요.`);
+    }
+  }});
   function challenge(){if(!canAct())return;refillTickets();if(state.battle.completed){notify('10-Final까지 모두 완료했어요!');return}if(state.tickets<1){notify('번개가 부족해요.','warning');return}state.tickets--;save();battleEngine.start()}
   function dispatchAction(act,id){const actions={openFood,openHygiene,school:openSchoolScene,talk,rest,cleanPoop,lights,treat,sitter,exercise:openExerciseScene,hygiene:openHygieneScene,buy:buyPrompt,chooseJob,workMenu,partner:partnerAction,child:childAction,nextGeneration,startGame:openMiniScene,challenge};if(actions[act])actions[act](id)}
   $('screen').addEventListener('click',e=>{const button=e.target.closest('[data-action]');if(button&&!button.disabled)dispatchAction(button.dataset.action,button.dataset.id)});
@@ -366,6 +411,178 @@
   window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Enter','Escape','a','b','c','A','B','C'].includes(e.key)){e.preventDefault();if(e.key==='Escape'&&activityEngine.active()){activityEngine.quit();return}const key=({ArrowLeft:'A',ArrowRight:'C',Enter:'B',Escape:'C'})[e.key]||e.key.toUpperCase();useKey(key)}});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){advance();render()}else save()});
   window.addEventListener('pagehide',save);
+  // v14: The saved pet remains compatible with earlier MOTCHI LIFE releases.
+  state.pet.skills.power ??= 0;
+  const originalLifeStage=lifeStage;
+  lifeStage=function(){
+    if(p().alive&&(p().eggGauge??100)>0&&p().stage==='egg')return 'egg';
+    const next=originalLifeStage();
+    const actions=p().growthActions||0;
+    if(p().stage==='baby'&&next!=='baby'&&actions<3)return 'baby';
+    if(p().stage==='child'&&['teen','adult','elder'].includes(next)&&actions<8)return 'child';
+    if(p().stage==='teen'&&['adult','elder'].includes(next)&&actions<15)return 'teen';
+    return next;
+  };
+  const originalCare=care;
+  care=function(reason){if(reason&&!/구입|구매|업그레이드|장착|직업 선택/.test(reason))p().growthActions=(p().growthActions||0)+1;originalCare(reason)};
+  const originalCanAct=canAct;
+  canAct=function(){if(p().stage==='egg'&&p().alive){notify('알을 터치해 부화 게이지를 줄여주세요.','warning');return false}return originalCanAct()};
+  const starterTypes = [
+    {name:'콩콩',trait:'든든함',skill:'power',label:'힘',detail:'아령의 한 방과 밀치기에 강해요.',color:'#75bd83',shape:'athlete'},
+    {name:'퐁퐁',trait:'날쌤',skill:'dodge',label:'회피',detail:'재빠르게 움직여 공격을 잘 피해요.',color:'#f19cb1',shape:'friend'},
+    {name:'몽글',trait:'튼튼함',skill:'fitness',label:'체력',detail:'오래 활동하고 전투를 버텨요.',color:'#89b7dc',shape:'rough'},
+    {name:'반짝',trait:'호기심',skill:'intellect',label:'지능',detail:'공부와 책 무기에 강해요.',color:'#f2c370',shape:'scholar'},
+    {name:'별콩',trait:'행운',skill:'luck',label:'행운',detail:'뜻밖의 보상과 강타를 잘 찾아요.',color:'#b9a4da',shape:'artist'}
+  ];
+  let starterIndex=0, shopCategory='food', petDragging=null, worldSoundAt=0;
+  const originalRenderTop=renderTop;
+  renderTop=function(){
+    originalRenderTop();
+    const world=document.querySelector('.world'),hour=new Date().getHours();
+    world.dataset.time=hour<6?'night':hour<11?'morning':hour<17?'day':hour<20?'sunset':'night';
+    $('ageLabel').textContent=`함께한 ${Math.floor(ageMinutes()/1440)+1}일째`;
+    if(p().stage==='egg')$('speech').textContent='알을 빠르게 터치하면 금이 가요!';
+    if(p().alive&&p().stage!=='egg'&&!petDragging){
+      const scene=document.querySelector('.pet-scene');
+      scene.style.left=`${cap(p().homeX??50,20,80)}%`;
+      scene.style.bottom=`${cap(p().homeY??15,12,27)}%`;
+    }
+  };
+  const originalDrawPet=drawPet;
+  drawPet=function(){
+    originalDrawPet();
+    const pet=p();if(!pet.alive||pet.stage==='egg')return;
+    const ctx=$('petCanvas').getContext('2d'),mark=pet.starter||0;
+    ctx.fillStyle=['#4d9b59','#e878a1','#4a99be','#e5a241','#8f7ac7'][mark];
+    if(mark===0){ctx.fillRect(27,56,17,17);ctx.fillRect(117,56,17,17)}
+    if(mark===1){ctx.fillRect(21,42,18,25);ctx.fillRect(121,42,18,25)}
+    if(mark===2){ctx.fillRect(18,76,16,24);ctx.fillRect(126,76,16,24)}
+    if(mark===3){ctx.fillRect(72,4,16,17);ctx.fillRect(66,10,28,8)}
+    if(mark===4){ctx.fillRect(63,0,35,7);ctx.fillRect(72,7,18,10)}
+  };
+  function renderStarter(){
+    const s=starterTypes[starterIndex];
+    $('dialog').innerHTML=`<h2>첫 모찌를 고르세요</h2><p>옆으로 밀어서 다섯 친구를 만나보세요.</p><div class="starter-carousel"><button type="button" data-starter-move="-1" aria-label="이전 모찌">❮</button><div class="starter-focus"><canvas id="starterCanvas" width="160" height="160" aria-label="${s.name} 도트 캐릭터"></canvas><strong>${s.name}</strong><small>${s.label} 특화 · ${s.detail}</small><span>${starterIndex+1} / 5</span></div><button type="button" data-starter-move="1" aria-label="다음 모찌">❯</button></div><button type="button" class="primary" data-starter-confirm="1">${s.name}과 시작하기</button>`;
+    $('dialogLayer').hidden=false;
+    const cv=$('starterCanvas'),ctx=cv.getContext('2d'),rows=sprites[s.shape],px=8;
+    ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,160,160);
+    rows.forEach((row,y)=>[...row].forEach((c,x)=>{if(c==='.')return;ctx.fillStyle=c==='1'?'#263c36':c==='5'?'#f5df8b':s.color;ctx.fillRect(16+x*px,16+y*px,px,px)}));
+  }
+  chooseStarter=function(){starterIndex=cap(p().starter??0,0,4);renderStarter()};
+  chooseHouse=function(){openDialog('첫 집을 고르세요','색만 다른 집이 아니라 풍경과 소리가 다른 공간입니다.',[
+    {label:'☀️ 햇살집 · 따뜻한 정원',run:()=>finishHouse('sunny')},
+    {label:'🌿 정글집 · 덩굴과 큰 잎',run:()=>finishHouse('forest')},
+    {label:'🌊 바닷집 · 파도와 조개',run:()=>finishHouse('sea')},
+    {label:'🌃 도시집 · 창밖 야경',run:()=>finishHouse('city')},
+    {label:'🍬 사탕집 · 달콤한 방',run:()=>finishHouse('pink')}
+  ],false)};
+  $('dialog').addEventListener('click',e=>{
+    const move=e.target.closest('[data-starter-move]');
+    if(move){starterIndex=(starterIndex+5+Number(move.dataset.starterMove))%5;renderStarter();tone(620);return}
+    if(e.target.closest('[data-starter-confirm]')){
+      const s=starterTypes[starterIndex];p().starter=starterIndex;p().name=s.name;p().trait=s.trait;
+      p().skills[s.skill]=12;save();chooseHouse();tone(790);
+    }
+  });
+  let carouselTouch=0;
+  $('dialog').addEventListener('touchstart',e=>{if(e.target.closest('.starter-carousel'))carouselTouch=e.changedTouches[0].clientX},{passive:true});
+  $('dialog').addEventListener('touchend',e=>{if(!e.target.closest('.starter-carousel'))return;const diff=e.changedTouches[0].clientX-carouselTouch;if(Math.abs(diff)>45){starterIndex=(starterIndex+5+(diff<0?1:-1))%5;renderStarter();tone(620)}},{passive:true});
+  const originalOpenDialog=openDialog;
+  openDialog=function(title,body,choices,closable=true){
+    originalOpenDialog(title,body,choices,closable);
+    if(title.includes('할아버지가 왔어요')){
+      $('dialog').classList.add('grandpa-dialog');
+      $('dialog').querySelector('p').insertAdjacentHTML('beforebegin','<div class="grandpa-arrival"><img src="./grandpa.svg" alt="도트 할아버지"><span>모찌야, 놀자꾸나!</span></div>');
+    }else $('dialog').classList.remove('grandpa-dialog');
+  };
+  const shopGroups={food:'음식',exercise:'운동',game:'게임',battle:'전투',care:'생활',decor:'꾸미기'};
+  const originalStatusView=statusView;
+  statusView=function(){return originalStatusView().replace('<h3 class="section-title">생활 능력</h3>','<h3 class="section-title">생활 능력</h3>'+statRow('힘',p().skills.power||0))};
+  const shopGroup=item=>item.type==='food'?'food':item.id==='bolt'||item.id==='gemPack'||item.id==='starCharm'?'game':['dumbbell','battleRope','battleBook'].includes(item.id)?'battle':['ball','rope','swimGear'].includes(item.id)?'exercise':item.type==='decor'?'decor':'care';
+  shopView=function(){const items=shop.filter(item=>shopGroup(item)===shopCategory);return `<h2 class="section-title">슈퍼마켓 <span class="pill">${state.coins}M · 💎${state.gems}</span></h2><div class="shop-categories">${Object.entries(shopGroups).map(([id,label])=>`<button type="button" data-shop-category="${id}" class="${id===shopCategory?'active':''}">${label}</button>`).join('')}</div><div class="cards">${items.map(item=>card(`${item.icon} ${item.name}`,`${item.desc} · ${item.type==='gear'&&has(item.id)?`Lv.${state.gearLevels[item.id]||1}/5 · ${state.equippedWeapon===item.id?'장착 중 · ':''}업그레이드 가능`:item.type==='ticket'?`${state.tickets}/30`:item.type==='gem'?`${item.price}💎`:item.type==='gemPack'?`${price(item)}M → 1💎`:`보유 ${inventoryCount(item.id)}개`} · ${item.type==='gem'?item.price+'💎':price(item)+'M'}`,'buy',item.id,(item.type==='gear'&&has(item.id)&&(state.gearLevels[item.id]||1)>=5&&!['dumbbell','battleRope','battleBook'].includes(item.id))||item.type==='decor'&&has(item.id))).join('')}</div>`};
+  function bagView(){
+    const owned=shop.filter(item=>inventoryCount(item.id)>0);
+    return `<h2 class="section-title">🎒 가방 <span class="pill">${owned.length}종</span></h2><p class="subtle">구입한 음식·도구·꾸미기 물건을 여기서 확인하고 사용해요.</p><div class="bag-resources"><span>🪙 ${state.coins}M</span><span>💎 ${state.gems}</span><span>⚡ ${state.tickets}/30</span></div><div class="cards">${owned.map(item=>{
+      const equipped=state.equippedWeapon===item.id;
+      const usable=item.type==='food'||item.id==='medicine'||['dumbbell','battleRope','battleBook'].includes(item.id);
+      const action=usable?`<button type="button" data-bag-use="${item.id}">${item.type==='food'?'먹기':item.id==='medicine'?'치료하기':equipped?'장착 중':'장착하기'}</button>`:`<span class="bag-passive">${item.type==='decor'?'집에 배치됨':'보유 효과 적용 중'}</span>`;
+      return `<div class="card"><strong>${item.icon} ${esc(item.name)}</strong><small>${esc(item.desc)} · ${item.type==='gear'?`Lv.${state.gearLevels[item.id]||1}`:`${inventoryCount(item.id)}개`}</small>${action}</div>`;
+    }).join('')||'<p class="subtle">아직 물건이 없어요. 상점에서 구매하면 여기에 들어옵니다.</p>'}</div>`;
+  }
+  renderTabs=function(){
+    const main=[['care','🏠','집'],['school','📚','학교'],['play','🎮','놀이'],['shop','🛒','상점'],['bag','🎒','가방']];
+    const extra=[['life','✨','생활'],['family','👪','가족'],['album','📖','기록']];
+    const button=([id,icon,label])=>`<button type="button" data-tab="${id}" class="${tab===id?'active':''}" aria-label="${label}"><span aria-hidden="true">${icon}</span><small>${label}</small></button>`;
+    $('tabs').innerHTML=`<div class="mobile-main compact-dock">${main.map(button).join('')}<button type="button" data-more="1" class="${menuOpen||extra.some(([id])=>id===tab)?'active':''}" aria-expanded="${menuOpen}"><span aria-hidden="true">☰</span><small>더보기</small></button></div><div class="mobile-extra compact-extra" ${menuOpen?'':'hidden'}>${extra.map(button).join('')}</div>`;
+  };
+  $('screen').addEventListener('click',e=>{
+    const button=e.target.closest('[data-bag-use]');if(!button)return;
+    const id=button.dataset.bagUse;
+    if(shop.some(item=>item.id===id&&item.type==='food'))feed(id);
+    else if(id==='medicine')treat();
+    else if(['dumbbell','battleRope','battleBook'].includes(id)){state.equippedWeapon=id;care(`${shop.find(item=>item.id===id).name} 장착!`)}
+    render();
+  });
+  $('profileButton').addEventListener('click',()=>{
+    const panel=$('profilePanel'),open=panel.hidden;
+    panel.hidden=!open;$('profileButton').setAttribute('aria-expanded',String(open));
+    if(open){panel.innerHTML=statusView();tone(640)}
+  });
+  const previousRenderTop=renderTop;
+  renderTop=function(){
+    previousRenderTop();
+    const avatar=$('profileAvatar'),ctx=avatar.getContext('2d');
+    ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,40,40);ctx.drawImage($('petCanvas'),0,0,160,128,0,4,40,32);
+    if(!$('profilePanel').hidden)$('profilePanel').innerHTML=statusView();
+  };
+  $('screen').addEventListener('click',e=>{const b=e.target.closest('[data-shop-category]');if(b){shopCategory=b.dataset.shopCategory;render();tone(520)}});
+  const originalNextGeneration=nextGeneration;
+  nextGeneration=function(){originalNextGeneration();p().skills.power??=0;save()};
+  const petCanvas=$('petCanvas'),petScene=document.querySelector('.pet-scene'),world=document.querySelector('.world');
+  petCanvas.style.touchAction='none';
+  petCanvas.addEventListener('pointerdown',e=>{
+    e.stopImmediatePropagation();
+    petCanvas.setPointerCapture?.(e.pointerId);
+    petDragging={x:e.clientX,y:e.clientY,moved:false};
+  },true);
+  petCanvas.addEventListener('pointermove',e=>{
+    if(!petDragging||p().stage==='egg'||!p().alive)return;
+    if(Math.hypot(e.clientX-petDragging.x,e.clientY-petDragging.y)<9&&!petDragging.moved)return;
+    petDragging.moved=true;const box=world.getBoundingClientRect();petScene.style.transition='none';
+    petScene.style.left=`${cap((e.clientX-box.left)/box.width*100,20,80)}%`;
+    petScene.style.bottom=`${cap((box.bottom-e.clientY)/box.height*100-13,12,27)}%`;
+  });
+  petCanvas.addEventListener('pointerup',e=>{
+    if(!petDragging)return;const moved=petDragging.moved;petDragging=null;
+    if(moved){p().homeX=parseFloat(petScene.style.left);p().homeY=parseFloat(petScene.style.bottom);petScene.style.transition='left .9s ease,bottom .9s ease';react('move','여기서 놀아볼게!');tone(460);save();renderTop();return}
+    if(p().stage==='egg'){
+      lastEggTouch=Date.now();p().eggGauge=cap((p().eggGauge??100)-3.8);if(p().eggGauge===0)stageUpdate();
+      $('speech').textContent=p().stage==='egg'?pick(['삐! 삐!','톡톡…','…!']):'와! 모찌가 태어났어!';save();renderTop();
+    }else{react('touch',pick(['삐삐!','헤헤, 간지러워!','나랑 놀자!']));petScene.classList.remove('touched');void petScene.offsetWidth;petScene.classList.add('touched');renderTop()}
+    tone(p().stage==='egg'?560:740);
+  });
+  petCanvas.addEventListener('pointercancel',()=>{petDragging=null;petScene.style.transition='left .9s ease,bottom .9s ease'});
+  function softTone(freq,duration=.22,volume=.012,type='sine'){
+    if(!state.sound||document.hidden)return;
+    try{audio ||=new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain(),at=audio.currentTime;o.type=type;o.frequency.setValueAtTime(freq,at);g.gain.setValueAtTime(.0001,at);g.gain.exponentialRampToValueAtTime(volume,at+.025);g.gain.exponentialRampToValueAtTime(.0001,at+duration);o.connect(g).connect(audio.destination);o.start(at);o.stop(at+duration+.01)}catch{}
+  }
+  function ambientTick(){if(!state.sound||document.hidden||activityEngine.active()||battleEngine.active())return;const now=Date.now();if(now-worldSoundAt<4200)return;worldSoundAt=now;const house=state.house;
+    if(house==='forest'){softTone(900,.11,.004);setTimeout(()=>softTone(1080,.1,.003),140)}
+    else if(house==='sea'){softTone(170,.75,.003);setTimeout(()=>softTone(130,.75,.002),250)}
+    else if(house==='city'){softTone(260,.16,.003,'triangle')}
+    else if(house==='pink'){softTone(660,.18,.004);setTimeout(()=>softTone(830,.18,.003),240)}
+    else softTone(480,.3,.003);
+  }
+  window.MotchiBattleExtras=()=>({power:p().skills.power||0,health:p().stats.health,stress:p().stats.stress,satiety:p().stats.satiety,mood:p().stats.mood,luck:p().skills.luck,petName:p().name,attackBoost:state.battleBoosts.attack,attackSpeedBoost:state.battleBoosts.speed,critBoost:state.battleBoosts.crit,goldBoost:state.battleBoosts.gold});
+  setInterval(()=>{if(!p().alive||p().stage==='egg'||petDragging||activityEngine.active()||battleEngine.active()||document.hidden)return;p().homeX=cap((p().homeX??50)+(Math.random()-.5)*20,20,80);p().homeY=cap((p().homeY??15)+(Math.random()-.5)*7,12,27);petScene.style.transition='left 2.8s ease,bottom 2.8s ease';renderTop()},4800);
+  setInterval(ambientTick,2300);
+  let musicStep=0;
+  setInterval(()=>{
+    if(!state.sound||document.hidden||!audio||audio.state!=='running')return;
+    const battle=battleEngine.active(),active=activityEngine.active();
+    const notes=battle?[196,262,330,392,330,262,220,294]:active?[294,370,440,370,330,392,440,494]:[262,330,392,330,294,349,392,330];
+    const note=notes[musicStep++%notes.length];softTone(note,battle?.18:.3,battle?.006:.004,'triangle');
+  },battleEngine.active()?450:850);
   advance();render();if(!state.selectionDone)chooseStarter();
   setInterval(()=>{if(p().stage!=='egg'||!p().alive||Date.now()-lastEggTouch<400||!Number.isFinite(p().eggGauge)||p().eggGauge>=100)return;p().eggGauge=cap(p().eggGauge+.3);renderTop()},200);
   setInterval(()=>{advance();render()},30000);
